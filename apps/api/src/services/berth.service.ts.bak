@@ -1,0 +1,95 @@
+import prisma from '../lib/prisma';
+
+export class BerthService {
+    static async getAll() {
+        return prisma.berth.findMany({
+            orderBy: { code: 'asc' }
+        });
+    }
+
+    static async getById(id: string) {
+        return prisma.berth.findUnique({
+            where: { id }
+        });
+    }
+
+    static async create(data: { code: string; name: string; status?: string; craneFunction?: string; craneStatus?: string; config?: any; zoneId?: string }) {
+        const berth = await prisma.berth.create({
+            data
+        });
+
+        if (data.config?.products) {
+            await this.syncCapabilities(berth.id, data.config.products);
+        }
+
+        return berth;
+    }
+
+    static async update(id: string, data: Partial<{ name: string; status: string; craneFunction: string; craneStatus: string; config: any }>) {
+        const berth = await prisma.berth.update({
+            where: { id },
+            data
+        });
+
+        if (data.config?.products) {
+            await this.syncCapabilities(berth.id, data.config.products);
+        }
+
+        return berth;
+    }
+
+    static async syncCapabilities(berthId: string, productsConfig: { INBOUND: string[], OUTBOUND: string[] }) {
+        // Delete old capabilities for this berth
+        await prisma.capabilityMatrix.deleteMany({
+            where: { berthId }
+        });
+
+        const capabilities = [];
+        const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
+        // Prepare new capabilities - Filter only valid UUIDs to avoid Prisma errors
+        if (productsConfig.INBOUND) {
+            for (const productId of productsConfig.INBOUND) {
+                if (isUUID(productId)) {
+                    capabilities.push({
+                        berthId,
+                        productId,
+                        direction: 'INBOUND',
+                        isPrimary: true
+                    });
+                }
+            }
+        }
+
+        if (productsConfig.OUTBOUND) {
+            for (const productId of productsConfig.OUTBOUND) {
+                if (isUUID(productId)) {
+                    capabilities.push({
+                        berthId,
+                        productId,
+                        direction: 'OUTBOUND',
+                        isPrimary: true
+                    });
+                }
+            }
+        }
+
+        if (capabilities.length > 0) {
+            await prisma.capabilityMatrix.createMany({
+                data: capabilities
+            });
+        }
+    }
+
+    static async delete(id: string) {
+        // Capabilities will be deleted due to potential relations or manually if needed
+        // Assuming cascade delete is not set up, or let's be safe:
+        await prisma.capabilityMatrix.deleteMany({
+            where: { berthId: id }
+        });
+
+        return prisma.berth.delete({
+            where: { id }
+        });
+    }
+}

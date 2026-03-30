@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { BerthController } from '../controllers/berth.controller';
+
+const router: Router = Router();
+
+router.get('/', BerthController.getAll);
+router.post('/', BerthController.create);
+router.put('/:id', BerthController.update);
+router.delete('/:id', BerthController.delete);
+
+export default router;

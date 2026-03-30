@@ -1,0 +1,91 @@
+import prisma from '../lib/prisma';
+
+export class MatchingService {
+  /**
+   * Suggests available berths for a specific voyage based on product compatibility 
+   * and direction using the CapabilityMatrix.
+   */
+  static async suggestBerths(productId: string, direction: string) {
+    if (!productId || !direction) {
+      throw new Error('ProductId and direction are required for matching');
+    }
+
+    // Find all capabilities that match this product and direction
+    const bestMatches = await prisma.capabilityMatrix.findMany({
+      where: {
+        productId,
+        direction
+      },
+      include: {
+        berth: {
+          include: {
+            voyages: {
+              where: {
+                status: { in: ['LAM_HANG', 'THU_TUC', 'NHAP'] }
+              },
+              orderBy: { eta: 'asc' }
+            }
+          }
+        }
+      }
+    });
+
+    const suggestions = [];
+
+    if (bestMatches.length === 0) {
+      // Fallback: If no capability match, return IDLE berths with low score
+      const idleBerths = await prisma.berth.findMany({
+        where: { status: 'IDLE' }
+      });
+
+      for (const berth of idleBerths) {
+        suggestions.push({
+          ...berth,
+          matchScore: 10,
+          reason: 'Cầu bến trống (Không có trong Ma trận năng lực cho hàng này)',
+          availability: 'IDLE'
+        });
+      }
+    } else {
+      for (const match of (bestMatches as any)) {
+        const berth = match.berth;
+        let score = match.isPrimary ? 100 : 80;
+        let availabilityText = '';
+        let availabilityStatus = berth.status;
+
+        // Adjust score based on berth status
+        if (berth.status === 'IDLE') {
+          score += 20; // Bonus for being free
+          availabilityText = 'Cầu bến đang trống - Sẵn sàng tiếp nhận';
+        } else if (berth.status === 'LAM_HANG') {
+          score -= 40; // Penalty for being occupied
+          const currentVoyage = (berth as any).voyages.find((v: any) => v.status === 'LAM_HANG');
+          if (currentVoyage && currentVoyage.etd) {
+            const etd = new Date(currentVoyage.etd);
+            availabilityText = `Đang có tàu - Dự kiến rời bến lúc ${etd.getHours()}:${etd.getMinutes().toString().padStart(2, '0')}`;
+          } else {
+            availabilityText = 'Đang có tàu - Chưa có lịch rời bến dự kiến';
+          }
+        } else {
+          score = 0; // Maintenance or Incident
+          availabilityText = berth.status === 'MAINTENANCE' ? 'Đang bảo trì' : 'Đang có sự cố';
+        }
+
+        suggestions.push({
+          id: berth.id,
+          code: berth.code,
+          name: berth.name,
+          matchScore: Math.max(0, Math.min(100, score)),
+          reason: match.isPrimary
+            ? `Cầu bến chuyên dụng cho ${direction === 'INBOUND' ? 'Nhập' : 'Xuất'} hàng này`
+            : `Có năng lực khai thác (${match.capacity || 0} Tấn/giờ)`,
+          availabilityInfo: availabilityText,
+          availabilityStatus: availabilityStatus
+        });
+      }
+    }
+
+    // Sort by score descending
+    return suggestions.sort((a, b) => b.matchScore - a.matchScore);
+  }
+}

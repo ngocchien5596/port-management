@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* PortPro Design System (Technical & Precise) */
+        --pp-primary: 258 89% 66%;    /* #7C3AED (Purple) */
+        --pp-secondary: 255 92% 76%;  /* #A78BFA (Lavender) */
+        --pp-accent: 25 95% 53%;     /* #F97316 (Orange/CTA) */
+        --pp-background: 270 100% 98%; /* #FAF5FF (Pale Purple) */
+        --pp-text: 263 67% 35%;      /* #4C1D95 (Deep Purple) */
+
+        /* Viettel Red Brand */
+        --vt-primary: 230 30 35;
+        --vt-primary-hover: 216 27 32;
+        --vt-primary-pressed: 197 22 27;
+        --vt-primary-soft: 253 232 233;
+        --vt-primary-soft2: 250 209 211;
+
+        /* Standard Shadcn Overrides to Brand */
+        --primary: 0 77% 50%; /* Adjusted HSL for E61E23: 0, 77%, 50% */
+        --primary-foreground: 0 0% 100%;
+        --ring: 0 77% 50%;
+
+        /* Text & Surface */
+        --vt-text-primary: 17 24 39;
+        --vt-text-secondary: 55 65 81;
+        --vt-text-muted: 107 114 128;
+        --vt-text-inverse: 255 255 255;
+
+        --vt-bg: 246 247 251;
+        --vt-surface: 255 255 255;
+        --vt-surface2: 243 244 246;
+
+        --vt-border: 229 231 235;
+        --vt-divider: 238 242 247;
+
+        /* Custom Fonts */
+        --font-heading: 'Roboto', sans-serif;
+        --font-body: 'Roboto', sans-serif;
+
+        /* States */
+        --vt-success: 22 163 74;
+        --vt-success-soft: 234 247 239;
+        --vt-warning: 245 158 11;
+        --vt-warning-soft: 255 244 221;
+        --vt-danger: 230 30 35;
+        --vt-danger-soft: 253 232 233;
+        --vt-info: 37 99 235;
+        --vt-info-soft: 234 242 255;
+
+        --vt-focus: 230 30 35 / 0.35;
+
+        /* Legacy Shadcn Compatibility */
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        /* Basic dark mode neutral vars, brand remains red */
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 0 77% 50%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 0 77% 50%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}

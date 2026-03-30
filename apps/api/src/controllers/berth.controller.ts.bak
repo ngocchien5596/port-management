@@ -1,0 +1,40 @@
+import { Request, Response } from 'express';
+import { BerthService } from '../services/berth.service';
+
+export class BerthController {
+    static async getAll(req: Request, res: Response) {
+        try {
+            const berths = await BerthService.getAll();
+            res.json(berths);
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    static async create(req: Request, res: Response) {
+        try {
+            const berth = await BerthService.create(req.body);
+            res.status(201).json(berth);
+        } catch (error: any) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+
+    static async update(req: Request, res: Response) {
+        try {
+            const berth = await BerthService.update(req.params.id, req.body);
+            res.json(berth);
+        } catch (error: any) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+
+    static async delete(req: Request, res: Response) {
+        try {
+            await BerthService.delete(req.params.id);
+            res.status(204).send();
+        } catch (error: any) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+}

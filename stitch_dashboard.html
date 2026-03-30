@@ -1,0 +1,345 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Spatial Port Grid Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e7082e",
+                        "background-light": "#F4F6FA",
+                        "background-dark": "#230f13",
+                        "surface": "#FFFFFF",
+                        "text-main": "#0F172A",
+                        "text-muted": "#64748B",
+                        "success": "#10B981",
+                        "warning": "#F59E0B",
+                        "alert": "#EF4444",
+                        "border-color": "#E2E8F0"
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "2px",
+                        "sm": "2px",
+                        "md": "4px",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F4F6FA; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-border-color bg-surface px-6 py-3 shrink-0">
+<div class="flex items-center gap-4 text-text-main">
+<div class="size-6 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-size: 28px;">anchor</span>
+</div>
+<h1 class="text-text-main text-xl font-bold uppercase tracking-wide" style=""><br></h1>
+</div>
+<nav class="flex flex-1 justify-end gap-8">
+<div class="flex items-center gap-6">
+<a class="text-primary text-sm font-bold uppercase tracking-wider border-b-2 border-primary py-1" href="#" style=""><br></a>
+<a class="text-text-muted hover:text-text-main text-sm font-bold uppercase tracking-wider transition-colors py-1" href="#" style=""><br></a>
+<a class="text-text-muted hover:text-text-main text-sm font-bold uppercase tracking-wider transition-colors py-1" href="#" style=""><br></a>
+<a class="flex items-center gap-1 text-text-muted hover:text-text-main text-sm font-bold uppercase tracking-wider transition-colors py-1" href="#" style=""><br>
+</a>
+</div>
+</nav>
+<div class="ml-8 flex items-center gap-3 pl-8 border-l border-border-color">
+<div class="text-right">
+<div class="text-xs font-bold uppercase text-text-muted" style=""><br></div>
+<div class="text-sm font-bold" style=""><br></div>
+</div>
+<div class="size-8 rounded-sm bg-border-color overflow-hidden">
+<img alt="Avatar" class="w-full h-full object-cover" data-alt="User avatar placeholder" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM3hbiJP_QJo3DpZHCjNvU-TeRLiZsw_nGvg_Nsnb0A4rSzG9NtYIdDf2wBWin9FAEznye8oC8CgHSjjrjDbqSi3BENFt5A2pIUrWuSi0DWwrdzyhKzGrp4vjSaG8cAVB-Iks4upknCWcq8ZKprQ-UyhYqireHX80cb50YymN64OLctdNAjnIIbufhmC7t4Vhv6zI_0QuDxiqjH95ki_C1NJ-ghLzI7gfreJd6Qbjt5IwSarSYFd_DEFHhHoiRccpgxTXefD_kop8" style="">
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col p-6 gap-6 overflow-hidden">
+<!-- KPI Header -->
+<div class="flex flex-wrap lg:flex-nowrap gap-4 shrink-0">
+<!-- KPI Card 1 -->
+<div class="flex flex-1 flex-col gap-1 rounded-sm p-5 border border-border-color bg-surface border-t-4 border-t-primary relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<p class="text-text-muted text-xs font-bold uppercase tracking-wider" style="">Trạng thái tàu</p>
+<span class="material-symbols-outlined text-text-muted text-lg" style="">directions_boat</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<p class="text-text-main text-3xl font-bold leading-none" style="">4</p>
+<p class="text-text-muted text-lg font-medium" style="">/ 12</p>
+</div>
+<p class="text-xs text-text-muted mt-2 font-medium" style="">Đang neo đậu / Tổng sức chứa</p>
+</div>
+<!-- KPI Card 2 -->
+<div class="flex flex-1 flex-col gap-1 rounded-sm p-5 border border-border-color bg-surface border-t-4 border-t-text-main relative overflow-hidden">
+<div class="flex justify-between items-start">
+<p class="text-text-muted text-xs font-bold uppercase tracking-wider" style="">Thiết bị cẩu</p>
+<span class="material-symbols-outlined text-text-muted text-lg" style="">precision_manufacturing</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<p class="text-text-main text-3xl font-bold leading-none" style="">18</p>
+<p class="text-text-muted text-lg font-medium" style="">/ 24</p>
+</div>
+<div class="flex gap-2 mt-2">
+<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase text-success bg-success/10 px-1.5 py-0.5 rounded-sm" style="">
+<span class="size-1.5 rounded-full bg-success"></span> 18 Hoạt động
+                </span>
+<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase text-warning bg-warning/10 px-1.5 py-0.5 rounded-sm" style="">
+<span class="size-1.5 rounded-full bg-warning"></span> 4 Rảnh
+                </span>
+</div>
+</div>
+<!-- KPI Card 3 -->
+<div class="flex flex-1 flex-col gap-1 rounded-sm p-5 border border-border-color bg-surface border-t-4 border-t-text-main relative overflow-hidden">
+<div class="flex justify-between items-start">
+<p class="text-text-muted text-xs font-bold uppercase tracking-wider" style="">Tổng sản lượng</p>
+<span class="material-symbols-outlined text-text-muted text-lg" style="">view_in_ar</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<p class="text-text-main text-3xl font-bold leading-none" style="">12,450</p>
+<p class="text-text-muted text-sm font-medium" style="">TEU</p>
+</div>
+<div class="w-full bg-background-light h-1.5 rounded-sm mt-3 overflow-hidden">
+<div class="bg-primary h-full rounded-sm" style="width: 65%;"></div>
+</div>
+<p class="text-xs text-text-muted mt-1 font-medium text-right" style="">65% Mục tiêu ca</p>
+</div>
+<!-- KPI Card 4 -->
+<div class="flex flex-1 flex-col gap-1 rounded-sm p-5 border border-border-color bg-surface border-t-4 border-t-alert relative overflow-hidden bg-alert/5">
+<div class="flex justify-between items-start">
+<p class="text-alert text-xs font-bold uppercase tracking-wider flex items-center gap-1" style="">
+<span class="size-2 rounded-full bg-alert animate-pulse"></span>
+                    Cảnh báo
+                </p>
+<span class="material-symbols-outlined text-alert text-lg" style="">warning</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<p class="text-alert text-3xl font-bold leading-none" style="">2</p>
+</div>
+<p class="text-xs text-alert mt-2 font-medium" style="">Chậm tiến độ luồng 2 &amp; 3</p>
+</div>
+</div>
+<!-- Spatial Grid (Channels) -->
+<div class="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-6 min-h-0">
+<!-- Channel 1 -->
+<div class="flex flex-col bg-surface border border-border-color rounded-sm overflow-hidden flex-1 h-full shadow-sm">
+<div class="bg-text-main text-surface px-4 py-3 flex justify-between items-center shrink-0">
+<div class="flex items-center gap-3">
+<h3 class="text-sm font-bold tracking-wider opacity-80 uppercase" style="">Luồng 1</h3>
+<div class="flex gap-1 border-l border-white/20 pl-3">
+<span class="bg-warning text-white text-xs font-bold px-3 py-1 rounded-sm font-mono flex items-center gap-1.5 shadow-sm" style="" title="STS-01: Đang làm hàng">
+<span class="size-2 rounded-full bg-white/40 animate-pulse"></span>
+                            STS-01 <span class="hidden xl:inline opacity-75" style="">• Đang làm hàng</span>
+</span>
+</div>
+</div>
+<span class="text-[10px] font-bold text-text-muted uppercase" style=""><br></span>
+</div>
+<div class="p-4 flex-1 overflow-y-auto bg-background-light/50 flex flex-col gap-4">
+<!-- Vessel Block -->
+<div class="bg-surface border border-border-color rounded-sm p-4 hover:border-primary hover:shadow-md transition-all cursor-pointer group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-success group-hover:bg-primary transition-colors"></div>
+<div class="flex justify-between items-start mb-3">
+<div>
+<h4 class="text-xl font-bold text-text-main leading-tight group-hover:text-primary transition-colors" style="">MSC ISABELLA</h4>
+<p class="text-xs font-medium text-text-muted font-mono mt-1" style="">IMO: 9839494</p>
+</div>
+<span class="bg-success/10 text-success text-[10px] font-bold px-2 py-1 rounded-sm border border-success/20 uppercase" style="">Đang làm hàng</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mb-4 bg-background-light p-2 rounded-sm border border-border-color/50">
+<div>
+<p class="text-[10px] text-text-muted uppercase font-bold" style="">ETA</p>
+<p class="text-sm font-medium font-mono" style="">08:00 12/10</p>
+</div>
+<div>
+<p class="text-[10px] text-text-muted uppercase font-bold" style="">ETD</p>
+<p class="text-sm font-medium font-mono" style="">18:00 12/10</p>
+</div>
+</div>
+<div class="mb-3">
+<div class="flex justify-between text-xs mb-1">
+<span class="font-bold text-text-muted uppercase text-[10px]" style="">Tiến độ</span>
+<span class="font-mono font-medium" style="">1,200 / 4,500 TEU</span>
+</div>
+<div class="w-full bg-background-light h-2 rounded-sm overflow-hidden border border-border-color/50">
+<div class="bg-success h-full rounded-sm" style="width: 26%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Channel 2 -->
+<div class="flex flex-col bg-surface border border-border-color rounded-sm overflow-hidden flex-1 h-full shadow-sm relative">
+<div class="absolute top-0 right-0 w-16 h-16 overflow-hidden z-10 pointer-events-none">
+<div class="bg-warning text-surface text-[10px] font-bold uppercase py-1 text-center transform rotate-45 translate-x-[18px] translate-y-[10px] shadow-sm w-full" style="">Chậm</div>
+</div>
+<div class="bg-text-main text-surface px-4 py-3 flex justify-between items-center shrink-0">
+<div class="flex items-center gap-3">
+<h3 class="text-sm font-bold tracking-wider opacity-80 uppercase" style="">Luồng 2</h3>
+<div class="flex gap-1 border-l border-white/20 pl-3">
+<span class="bg-alert text-white text-xs font-bold px-3 py-1 rounded-sm font-mono flex items-center gap-1.5 shadow-sm" style="" title="STS-05: Sửa chữa">
+<span class="material-symbols-outlined text-[14px]" style="">settings_suggest</span>
+                            STS-05 <span class="hidden xl:inline opacity-75" style="">• Sửa chữa</span>
+</span>
+</div>
+</div>
+<span class="text-[10px] font-bold text-text-muted uppercase pr-6" style=""><br></span>
+</div>
+<div class="p-4 flex-1 overflow-y-auto bg-background-light/50 flex flex-col gap-4">
+<!-- Vessel Block -->
+<div class="bg-surface border border-border-color rounded-sm p-4 hover:border-primary hover:shadow-md transition-all cursor-pointer group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-warning group-hover:bg-primary transition-colors"></div>
+<div class="flex justify-between items-start mb-3">
+<div>
+<h4 class="text-xl font-bold text-text-main leading-tight group-hover:text-primary transition-colors" style="">EVER GIVEN</h4>
+<p class="text-xs font-medium text-text-muted font-mono mt-1" style="">IMO: 9811000</p>
+</div>
+<span class="bg-warning/10 text-warning text-[10px] font-bold px-2 py-1 rounded-sm border border-warning/20 uppercase" style="">CHẬM TIẾN ĐỘ</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mb-4 bg-background-light p-2 rounded-sm border border-border-color/50">
+<div>
+<p class="text-[10px] text-text-muted uppercase font-bold" style="">ETA</p>
+<p class="text-sm font-medium font-mono text-alert" style="">06:00 12/10</p>
+</div>
+<div>
+<p class="text-[10px] text-text-muted uppercase font-bold" style="">ETD</p>
+<p class="text-sm font-medium font-mono text-alert" style="">14:00 12/10</p>
+</div>
+</div>
+<div class="mb-3">
+<div class="flex justify-between text-xs mb-1">
+<span class="font-bold text-text-muted uppercase text-[10px]" style="">Tiến độ</span>
+<span class="font-mono font-medium" style="">4,100 / 8,500 TEU</span>
+</div>
+<div class="w-full bg-background-light h-2 rounded-sm overflow-hidden border border-border-color/50">
+<div class="bg-warning h-full rounded-sm" style="width: 48%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Channel 3 -->
+<div class="flex flex-col bg-surface border border-border-color rounded-sm overflow-hidden flex-1 h-full shadow-sm">
+<div class="bg-text-main text-surface px-4 py-3 flex justify-between items-center shrink-0">
+<div class="flex items-center gap-3">
+<h3 class="text-sm font-bold tracking-wider opacity-80 uppercase" style="">Luồng 3</h3>
+<div class="flex gap-2 border-l border-white/20 pl-3">
+<span class="bg-warning text-white text-xs font-bold px-3 py-1 rounded-sm font-mono flex items-center gap-1" style="" title="STS-08: Đang làm hàng">
+                            STS-08
+                        </span>
+<span class="bg-warning text-white text-xs font-bold px-3 py-1 rounded-sm font-mono flex items-center gap-1" style="" title="STS-09: Đang làm hàng">
+                            STS-09
+                        </span>
+</div>
+</div>
+<span class="text-[10px] font-bold text-text-muted uppercase" style=""><br></span>
+</div>
+<div class="p-4 flex-1 overflow-y-auto bg-background-light/50 flex flex-col gap-4">
+<!-- Vessel Block -->
+<div class="bg-surface border border-border-color rounded-sm p-4 hover:border-primary hover:shadow-md transition-all cursor-pointer group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-success group-hover:bg-primary transition-colors"></div>
+<div class="flex justify-between items-start mb-3">
+<div>
+<h4 class="text-xl font-bold text-text-main leading-tight group-hover:text-primary transition-colors" style="">CMA CGM LOUVRE</h4>
+<p class="text-xs font-medium text-text-muted font-mono mt-1" style="">IMO: 9839937</p>
+</div>
+<span class="bg-success/10 text-success text-[10px] font-bold px-2 py-1 rounded-sm border border-success/20 uppercase" style="">Đang làm hàng</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mb-4 bg-background-light p-2 rounded-sm border border-border-color/50">
+<div>
+<p class="text-[10px] text-text-muted uppercase font-bold" style="">ETA</p>
+<p class="text-sm font-medium font-mono" style="">10:30 12/10</p>
+</div>
+<div>
+<p class="text-[10px] text-text-muted uppercase font-bold" style="">ETD</p>
+<p class="text-sm font-medium font-mono" style="">22:00 12/10</p>
+</div>
+</div>
+<div class="mb-3">
+<div class="flex justify-between text-xs mb-1">
+<span class="font-bold text-text-muted uppercase text-[10px]" style="">Tiến độ</span>
+<span class="font-mono font-medium" style="">850 / 6,200 TEU</span>
+</div>
+<div class="w-full bg-background-light h-2 rounded-sm overflow-hidden border border-border-color/50">
+<div class="bg-success h-full rounded-sm" style="width: 14%;"></div>
+</div>
+</div>
+</div>
+<!-- Vessel Block (Waiting) -->
+<div class="bg-background-light border border-border-color border-dashed rounded-sm p-4 opacity-75 group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-text-muted"></div>
+<div class="flex justify-between items-start mb-3">
+<div>
+<h4 class="text-lg font-bold text-text-muted leading-tight" style="">OOCL HONG KONG</h4>
+<p class="text-xs font-medium text-text-muted font-mono mt-1" style="">IMO: 9776171</p>
+</div>
+<span class="bg-border-color text-text-muted text-[10px] font-bold px-2 py-1 rounded-sm uppercase" style="">Chờ cập bến</span>
+</div>
+<div class="grid grid-cols-2 gap-2 bg-surface p-2 rounded-sm border border-border-color/50">
+<div>
+<p class="text-[10px] text-text-muted uppercase font-bold" style="">ETA (Dự kiến)</p>
+<p class="text-sm font-medium font-mono text-text-muted" style="">23:00 12/10</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Channel 4 -->
+<div class="flex flex-col bg-surface border border-border-color rounded-sm overflow-hidden flex-1 h-full shadow-sm">
+<div class="bg-text-main text-surface px-4 py-3 flex justify-between items-center shrink-0">
+<div class="flex items-center gap-3">
+<h3 class="text-sm font-bold tracking-wider opacity-80 uppercase" style="">Luồng 4</h3>
+<div class="flex gap-1 border-l border-white/20 pl-3">
+<span class="bg-success text-white text-xs font-bold px-3 py-1 rounded-sm font-mono flex items-center gap-1.5 shadow-sm" style="" title="STS-10: Trống cảng">
+<span class="size-2 rounded-full bg-white/60"></span>
+                            STS-10 <span class="hidden xl:inline opacity-75" style="">• Trống cảng</span>
+</span>
+</div>
+</div>
+<span class="text-[10px] font-bold text-text-muted uppercase" style=""><br></span>
+</div>
+<div class="p-4 flex-1 flex flex-col items-center justify-center bg-background-light/30 border-2 border-dashed border-border-color m-4 rounded-sm">
+<span class="material-symbols-outlined text-border-color text-5xl mb-2" style="">sailing</span>
+<p class="text-text-muted font-bold tracking-wider uppercase" style="">Không có tàu</p>
+<p class="text-xs text-text-muted mt-1 font-medium" style="">Sẵn sàng tiếp nhận</p>
+<button class="mt-4 border border-text-muted text-text-muted hover:border-primary hover:text-primary px-4 py-1.5 rounded-sm text-xs font-bold uppercase transition-colors" style="">
+                    Chỉ định tàu
+                </button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

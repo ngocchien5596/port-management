@@ -1,0 +1,345 @@
+{
+  "employees": [
+    {
+      "id": "cmmt11x4g0000w62cojbhzlt1",
+      "employeeCode": "480190",
+      "fullName": "Bùi Ngọc Chiến",
+      "email": "admin480190@company.com",
+      "createdAt": "2026-03-16T10:15:09.808Z",
+      "updatedAt": "2026-03-16T17:27:36.634Z"
+    }
+  ],
+  "accounts": [
+    {
+      "id": "cmmt11x540002w62chsxxc8yi",
+      "employeeId": "cmmt11x4g0000w62cojbhzlt1",
+      "passwordHash": "$2b$10$uKfrzPNrYfnLYmUdupf1qe.hmzWiIO7y7PMJSv3mdCZAhhDzciIx.",
+      "secretCode": "123456",
+      "role": "ADMIN_SYSTEM",
+      "isActive": true,
+      "lastLogin": "2026-03-19T22:46:05.527Z",
+      "passwordChangedAt": null,
+      "secretCodeChangedAt": null,
+      "createdAt": "2026-03-16T10:15:09.832Z",
+      "updatedAt": "2026-03-19T22:46:05.527Z"
+    }
+  ],
+  "vessels": [
+    {
+      "id": "ba8846ad-fc89-4989-82a2-5714f1c4c0fb",
+      "code": "VS-OOCL1",
+      "name": "OOCL Hong Kong",
+      "customerName": "OOCL",
+      "capacity": "21413",
+      "customerPhone": "0901234567",
+      "imoCode": "9776171",
+      "vesselType": "CONTAINER",
+      "createdAt": "2026-03-16T12:02:31.285Z",
+      "updatedAt": "2026-03-16T12:02:31.285Z"
+    },
+    {
+      "id": "b0637692-afc1-48d3-8ae5-3afaf82c25c3",
+      "code": "VS-MSAE1",
+      "name": "MSC Oscar",
+      "customerName": "MSC",
+      "capacity": "19224",
+      "customerPhone": "0912345678",
+      "imoCode": "9703291",
+      "vesselType": "CONTAINER",
+      "createdAt": "2026-03-16T12:02:31.294Z",
+      "updatedAt": "2026-03-16T12:02:31.294Z"
+    },
+    {
+      "id": "17135c6d-b802-4da0-84fa-14273951c156",
+      "code": "VS-BLK2",
+      "name": "Valemax Brasil",
+      "customerName": "Vale",
+      "capacity": "402347",
+      "customerPhone": "0976543210",
+      "imoCode": "9488918",
+      "vesselType": "BULKER",
+      "createdAt": "2026-03-16T12:02:31.302Z",
+      "updatedAt": "2026-03-16T12:02:31.302Z"
+    },
+    {
+      "id": "28a9fdd6-6c79-4f7b-9e86-170c98fcd257",
+      "code": "VS-GEN1",
+      "name": "Symphony Star",
+      "customerName": "Symphony Shipping",
+      "capacity": "10500",
+      "customerPhone": "0961234567",
+      "imoCode": "9726669",
+      "vesselType": "GENERAL_CARGO",
+      "createdAt": "2026-03-16T12:02:31.305Z",
+      "updatedAt": "2026-03-16T12:02:31.305Z"
+    },
+    {
+      "id": "0b854975-6bf6-49e2-b8fd-dbd3316ae7ac",
+      "code": "VS-TNK1",
+      "name": "Seawise Giant",
+      "customerName": "Frontline",
+      "capacity": "564763",
+      "customerPhone": "0923456789",
+      "imoCode": "7381154",
+      "vesselType": "TANKER",
+      "createdAt": "2026-03-16T12:02:31.307Z",
+      "updatedAt": "2026-03-16T12:02:31.307Z"
+    },
+    {
+      "id": "879c4ce4-8a6c-4984-a65e-f322901ab0ab",
+      "code": "VS-RORO1",
+      "name": "Hoegh Target",
+      "customerName": "Höegh Autoliners",
+      "capacity": "8500",
+      "customerPhone": "0945678901",
+      "imoCode": "9684976",
+      "vesselType": "RORO",
+      "createdAt": "2026-03-16T12:02:31.311Z",
+      "updatedAt": "2026-03-16T12:02:31.311Z"
+    },
+    {
+      "id": "f39771d9-0f1d-4814-a7f5-8a3692019e93",
+      "code": "VS-BLK1",
+      "name": "Berge Stahl",
+      "customerName": "Berge Bulk",
+      "capacity": "364769",
+      "customerPhone": "0934567890",
+      "imoCode": "8420804",
+      "vesselType": "BULKER",
+      "createdAt": "2026-03-16T12:02:31.299Z",
+      "updatedAt": "2026-03-18T16:38:39.186Z"
+    },
+    {
+      "id": "24254952-b072-4056-9997-b520bd63e5ad",
+      "code": "VS-CMA1",
+      "name": "CMA CGM Jacques",
+      "customerName": "CMA CGM",
+      "capacity": "23000",
+      "customerPhone": "0987654321",
+      "imoCode": "9839131",
+      "vesselType": "CONTAINER",
+      "createdAt": "2026-03-16T12:02:31.297Z",
+      "updatedAt": "2026-03-18T16:46:44.629Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "092fe04d-5c75-4974-b68a-7849da10f2f3",
+      "code": "PROD_1773656229797",
+      "name": "Than",
+      "unit": "TON",
+      "type": "IMPORT",
+      "createdAt": "2026-03-16T17:17:09.803Z",
+      "updatedAt": "2026-03-16T17:17:09.803Z"
+    },
+    {
+      "id": "96e78468-4e62-4f01-9c4c-45a6d02e1195",
+      "code": "PROD_1773656237587",
+      "name": "Phụ gia",
+      "unit": "TON",
+      "type": "IMPORT",
+      "createdAt": "2026-03-16T17:17:17.592Z",
+      "updatedAt": "2026-03-16T17:17:17.592Z"
+    },
+    {
+      "id": "289ef759-6f1d-4e76-ac89-2bdc4fb091ff",
+      "code": "PROD_1773656244898",
+      "name": "Sét",
+      "unit": "TON",
+      "type": "IMPORT",
+      "createdAt": "2026-03-16T17:17:24.904Z",
+      "updatedAt": "2026-03-16T17:17:24.904Z"
+    },
+    {
+      "id": "4c1d7098-5034-440e-ac44-e40fc9e56093",
+      "code": "PROD_1773656254521",
+      "name": "Xi măng xuất khẩu",
+      "unit": "TON",
+      "type": "EXPORT",
+      "createdAt": "2026-03-16T17:17:34.533Z",
+      "updatedAt": "2026-03-16T17:17:34.533Z"
+    },
+    {
+      "id": "f4a5896a-fcbc-49ec-b49c-676a74df240e",
+      "code": "PROD_1773656280033",
+      "name": "Clinker",
+      "unit": "TON",
+      "type": "EXPORT",
+      "createdAt": "2026-03-16T17:18:00.038Z",
+      "updatedAt": "2026-03-16T17:18:00.038Z"
+    },
+    {
+      "id": "a73077ce-b2b9-4c1a-ab34-4d4d02e30922",
+      "code": "PROD_1773656270742",
+      "name": "Xi măng bao nội địa",
+      "unit": "TON",
+      "type": "EXPORT",
+      "createdAt": "2026-03-16T17:17:50.747Z",
+      "updatedAt": "2026-03-16T17:18:05.637Z"
+    }
+  ],
+  "lanes": [
+    {
+      "id": "cmmt18tda0000v2a30h8gh71d",
+      "name": "Luồng 1",
+      "createdAt": "2026-03-16T17:20:31.533Z",
+      "updatedAt": "2026-03-16T17:20:31.533Z"
+    },
+    {
+      "id": "cmmt18x8s0001v2a350ph2gsh",
+      "name": "Luồng 2",
+      "createdAt": "2026-03-16T17:20:36.555Z",
+      "updatedAt": "2026-03-16T17:20:36.555Z"
+    },
+    {
+      "id": "cmmt191i20002v2a3iyqx6ox8",
+      "name": "Luồng 3",
+      "createdAt": "2026-03-16T17:20:42.073Z",
+      "updatedAt": "2026-03-16T17:20:42.073Z"
+    },
+    {
+      "id": "cmmt195720003v2a33tx27b5p",
+      "name": "Luồng 4",
+      "createdAt": "2026-03-16T17:20:46.861Z",
+      "updatedAt": "2026-03-16T17:20:46.861Z"
+    }
+  ],
+  "equipments": [
+    {
+      "id": "cmmt1ah1o0009v2a3v2qlqg3c",
+      "name": "Cẩu điện",
+      "capacity": "35",
+      "laneId": "cmmt191i20002v2a3iyqx6ox8",
+      "manualStatus": null,
+      "createdAt": "2026-03-16T17:21:48.874Z",
+      "updatedAt": "2026-03-17T11:40:39.310Z",
+      "products": [
+        {
+          "id": "4c1d7098-5034-440e-ac44-e40fc9e56093",
+          "code": "PROD_1773656254521",
+          "name": "Xi măng xuất khẩu",
+          "unit": "TON",
+          "type": "EXPORT",
+          "createdAt": "2026-03-16T17:17:34.533Z",
+          "updatedAt": "2026-03-16T17:17:34.533Z"
+        }
+      ]
+    },
+    {
+      "id": "cmmt1bi18000dv2a336ritbs7",
+      "name": "Cẩu 173BS",
+      "capacity": "45",
+      "laneId": "cmmt195720003v2a33tx27b5p",
+      "manualStatus": null,
+      "createdAt": "2026-03-16T17:22:36.810Z",
+      "updatedAt": "2026-03-17T15:39:47.276Z",
+      "products": [
+        {
+          "id": "f4a5896a-fcbc-49ec-b49c-676a74df240e",
+          "code": "PROD_1773656280033",
+          "name": "Clinker",
+          "unit": "TON",
+          "type": "EXPORT",
+          "createdAt": "2026-03-16T17:18:00.038Z",
+          "updatedAt": "2026-03-16T17:18:00.038Z"
+        }
+      ]
+    },
+    {
+      "id": "cmmt1a2im0007v2a3hxmpks4s",
+      "name": "Cẩu 113GC01",
+      "capacity": "30",
+      "laneId": "cmmt18x8s0001v2a350ph2gsh",
+      "manualStatus": null,
+      "createdAt": "2026-03-16T17:21:30.044Z",
+      "updatedAt": "2026-03-18T16:38:27.357Z",
+      "products": [
+        {
+          "id": "96e78468-4e62-4f01-9c4c-45a6d02e1195",
+          "code": "PROD_1773656237587",
+          "name": "Phụ gia",
+          "unit": "TON",
+          "type": "IMPORT",
+          "createdAt": "2026-03-16T17:17:17.592Z",
+          "updatedAt": "2026-03-16T17:17:17.592Z"
+        },
+        {
+          "id": "289ef759-6f1d-4e76-ac89-2bdc4fb091ff",
+          "code": "PROD_1773656244898",
+          "name": "Sét",
+          "unit": "TON",
+          "type": "IMPORT",
+          "createdAt": "2026-03-16T17:17:24.904Z",
+          "updatedAt": "2026-03-16T17:17:24.904Z"
+        },
+        {
+          "id": "4c1d7098-5034-440e-ac44-e40fc9e56093",
+          "code": "PROD_1773656254521",
+          "name": "Xi măng xuất khẩu",
+          "unit": "TON",
+          "type": "EXPORT",
+          "createdAt": "2026-03-16T17:17:34.533Z",
+          "updatedAt": "2026-03-16T17:17:34.533Z"
+        }
+      ]
+    },
+    {
+      "id": "cmmt1ayb9000bv2a3lbx8tywv",
+      "name": "Cẩu 173LS",
+      "capacity": "40",
+      "laneId": "cmmt191i20002v2a3iyqx6ox8",
+      "manualStatus": null,
+      "createdAt": "2026-03-16T17:22:11.251Z",
+      "updatedAt": "2026-03-19T11:26:28.711Z",
+      "products": [
+        {
+          "id": "a73077ce-b2b9-4c1a-ab34-4d4d02e30922",
+          "code": "PROD_1773656270742",
+          "name": "Xi măng bao nội địa",
+          "unit": "TON",
+          "type": "EXPORT",
+          "createdAt": "2026-03-16T17:17:50.747Z",
+          "updatedAt": "2026-03-16T17:18:05.637Z"
+        }
+      ]
+    },
+    {
+      "id": "cmmt19pl40005v2a3295pkqlp",
+      "name": "Cẩu 115GC01",
+      "capacity": "25",
+      "laneId": "cmmt18tda0000v2a30h8gh71d",
+      "manualStatus": null,
+      "createdAt": "2026-03-16T17:21:13.284Z",
+      "updatedAt": "2026-03-20T08:21:32.781Z",
+      "products": [
+        {
+          "id": "092fe04d-5c75-4974-b68a-7849da10f2f3",
+          "code": "PROD_1773656229797",
+          "name": "Than",
+          "unit": "TON",
+          "type": "IMPORT",
+          "createdAt": "2026-03-16T17:17:09.803Z",
+          "updatedAt": "2026-03-16T17:17:09.803Z"
+        },
+        {
+          "id": "96e78468-4e62-4f01-9c4c-45a6d02e1195",
+          "code": "PROD_1773656237587",
+          "name": "Phụ gia",
+          "unit": "TON",
+          "type": "IMPORT",
+          "createdAt": "2026-03-16T17:17:17.592Z",
+          "updatedAt": "2026-03-16T17:17:17.592Z"
+        },
+        {
+          "id": "4c1d7098-5034-440e-ac44-e40fc9e56093",
+          "code": "PROD_1773656254521",
+          "name": "Xi măng xuất khẩu",
+          "unit": "TON",
+          "type": "EXPORT",
+          "createdAt": "2026-03-16T17:17:34.533Z",
+          "updatedAt": "2026-03-16T17:17:34.533Z"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Port Management New
+  port-mgmt-db:
+    image: postgres:16-alpine
+    container_name: port-mgmt-db
+    environment:
+      POSTGRES_USER: meal_user
+      POSTGRES_PASSWORD: dev123456
+      POSTGRES_DB: port_management_new
+    ports:
+      - "5445:5432"
+    volumes:
+      - port_mgmt_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meal_user -d port_management_new"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Port Management New
+  port-mgmt-redis:
+    image: redis:7-alpine
+    container_name: port-mgmt-redis
+    command: redis-server --requirepass dev123456
+    ports:
+      - "6381:6379"
+    volumes:
+      - port_mgmt_redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "dev123456", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Adminer for Port Management New
+  port-mgmt-adminer:
+    image: adminer:latest
+    container_name: port-mgmt-adminer
+    ports:
+      - "8082:8080"
+    depends_on:
+      - port-mgmt-db
+    restart: unless-stopped
+
+volumes:
+  port_mgmt_postgres_data:
+  port_mgmt_redis_data:

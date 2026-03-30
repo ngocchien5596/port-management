@@ -1,0 +1,12 @@
+import { Router } from 'express';
+import { ZoneController } from '../controllers/zone.controller';
+
+const router: Router = Router();
+
+router.get('/', ZoneController.getAll);
+router.get('/:id', ZoneController.getById);
+router.post('/', ZoneController.create);
+router.put('/:id', ZoneController.update);
+router.delete('/:id', ZoneController.delete);
+
+export default router;

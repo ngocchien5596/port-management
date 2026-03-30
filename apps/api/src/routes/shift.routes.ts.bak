@@ -1,0 +1,18 @@
+import { Router } from 'express';
+import { PrismaClient } from '@prisma/client';
+
+const router: Router = Router();
+const prisma = new PrismaClient();
+
+router.get('/', async (req, res) => {
+    try {
+        const shifts = await prisma.shift.findMany({
+            orderBy: { startTime: 'asc' }
+        });
+        res.json(shifts);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+export default router;

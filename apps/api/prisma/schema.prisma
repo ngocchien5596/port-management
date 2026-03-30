@@ -1,0 +1,269 @@
+// Prisma schema for Port Management New project
+// Combined base from Meal Management and logic from Port Management
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum Role {
+  EMPLOYEE
+  ADMIN_KITCHEN
+  ADMIN_SYSTEM
+  HR
+  PORT_OPERATOR
+}
+
+enum IncidentScope {
+  GLOBAL
+  LANE
+  EQUIPMENT
+  VOYAGE
+}
+
+enum CheckinMethod {
+  QR_SCAN
+  MANUAL
+  SELF_SCAN
+}
+
+// ==================== CORE MODELS (Base) ====================
+
+// (Department and Position models removed as they are no longer needed)
+
+enum CargoCategory {
+  IMPORT
+  EXPORT
+}
+
+
+
+model Lane {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  equipments  Equipment[]
+  voyages     Voyage[]
+  incidents   Incident[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Equipment {
+  id            String           @id @default(cuid())
+  name          String           @unique
+  capacity      Decimal?         @default(100) // Ton/hour
+  lane          Lane             @relation(fields: [laneId], references: [id])
+  laneId        String
+  products      Product[]        @relation("EquipmentToProduct")
+  manualStatus  String?          // Override status: MAINTENANCE, REPAIR, etc.
+  events        EquipmentEvent[]
+  incidents     Incident[]
+  voyages       Voyage[]         @relation("VoyageToEquipment")
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model EquipmentEvent {
+  id            String    @id @default(cuid())
+  equipmentId   String
+  type          String    // STATUS_CHANGE, MAINTENANCE, etc.
+  title         String
+  description   String?
+  metadata      Json?
+  userId        String?
+  employee      Employee? @relation(fields: [userId], references: [id])
+  equipment     Equipment @relation(fields: [equipmentId], references: [id])
+  createdAt     DateTime  @default(now())
+}
+
+model Employee {
+  id            String         @id @default(cuid())
+  employeeCode  String         @unique
+  fullName      String
+  email         String?        @unique
+  account       Account?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  voyageEvents        VoyageEvent[]
+  createdProgress     VoyageProgress[] @relation("ProgressCreatedBy")
+  updatedProgress     VoyageProgress[] @relation("ProgressUpdatedBy")
+  equipmentEvents     EquipmentEvent[]
+  notifications       Notification[]
+}
+
+model Account {
+  id                  String    @id @default(cuid())
+  employee            Employee  @relation(fields: [employeeId], references: [id])
+  employeeId          String    @unique
+  passwordHash        String
+  secretCode          String    @db.VarChar(50)
+  role                Role      @default(EMPLOYEE)
+  isActive            Boolean   @default(true)
+  lastLogin           DateTime?
+  passwordChangedAt   DateTime?
+  secretCodeChangedAt DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+
+// ==================== PORT MANAGEMENT MODELS (Logic) ====================
+
+model Vessel {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  name          String?
+  customerName  String
+  capacity      Decimal?
+  customerPhone String?
+  imoCode       String?  @unique
+  vesselType    String?
+  voyages       Voyage[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+
+model Product {
+  id                  String             @id @default(uuid())
+  code                String             @unique
+  name                String
+  unit                String             @default("TON")
+  type                String
+  voyages             Voyage[]
+  equipments          Equipment[]        @relation("EquipmentToProduct")
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+}
+
+enum VoyageStatus {
+  NHAP
+  THU_TUC
+  DO_MON_DAU_VAO
+  LAY_MAU
+  LAM_HANG
+  DO_MON_DAU_RA
+  HOAN_THANH
+  TAM_DUNG
+  HUY_BO
+}
+
+model Voyage {
+  id                 String           @id @default(uuid())
+  voyageCode         Int              @unique @default(autoincrement())
+  vesselId           String
+  productId          String
+  type               String
+  status             VoyageStatus     @default(NHAP)
+  priority           String           @default("NORMAL")
+  queueNo            Int              @default(0)
+  isYielded          Boolean          @default(false)
+  eta                DateTime?
+  etd                DateTime?
+  totalVolume        Decimal?
+  procedureTimeHours Decimal?         @default(0)
+  actualArrival      DateTime?
+  actualDeparture    DateTime?
+  readinessChecklist Json?
+  cancelReason       String?
+  incidents          Incident[]
+  laneId             String?
+  equipmentId        String?
+  lane               Lane?            @relation(fields: [laneId], references: [id])
+  equipment          Equipment?       @relation("VoyageToEquipment", fields: [equipmentId], references: [id])
+  product            Product          @relation(fields: [productId], references: [id])
+  vessel             Vessel           @relation(fields: [vesselId], references: [id])
+  events             VoyageEvent[]
+  progress           VoyageProgress[]
+  notifications      Notification[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([laneId, status])
+}
+
+model Incident {
+  id          String        @id @default(uuid())
+  scope       IncidentScope @default(VOYAGE)
+  voyageId    String?
+  laneId      String?
+  equipmentId String?
+  type        String
+  severity    String
+  description String
+  startTime   DateTime      @default(now())
+  endTime     DateTime?
+  userId      String
+  
+  voyage      Voyage?       @relation(fields: [voyageId], references: [id])
+  lane        Lane?         @relation(fields: [laneId], references: [id])
+  equipment   Equipment?    @relation(fields: [equipmentId], references: [id])
+  parentId    String?
+  parent      Incident?     @relation("IncidentHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children    Incident[]    @relation("IncidentHierarchy")
+  
+  createdAt   DateTime      @default(now())
+}
+
+model VoyageEvent {
+  id          String   @id @default(uuid())
+  voyageId    String
+  type        String
+  title       String
+  description String?
+  metadata    Json?
+  userId      String?
+  employee    Employee? @relation(fields: [userId], references: [id])
+  voyage      Voyage    @relation(fields: [voyageId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model VoyageProgress {
+  id           String   @id @default(uuid())
+  voyageId     String
+  amount       Decimal
+  hours        Decimal?
+  startTime    DateTime?
+  endTime      DateTime?
+  shiftCode    String?   // Bổ sung mã ca làm việc (CA_1, CA_2, CA_3) phục vụ báo cáo sản lượng
+  productivity Decimal?
+  cumulative   Decimal
+  userId       String?
+  employee     Employee? @relation("ProgressCreatedBy", fields: [userId], references: [id])
+  updatedById  String?
+  updatedBy    Employee? @relation("ProgressUpdatedBy", fields: [updatedById], references: [id])
+  notes        String?
+  voyage       Voyage   @relation(fields: [voyageId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime?
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  type      String
+  title     String
+  message   String
+  severity  String
+  isRead    Boolean  @default(false)
+  userId    String?
+  voyageId  String?
+  
+  employee  Employee? @relation(fields: [userId], references: [id])
+  voyage    Voyage?   @relation(fields: [voyageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
