@@ -212,6 +212,7 @@ model SystemConfig {
 }
 
 enum Role {
+  ADMIN_SYSTEM
   MANAGER
   STAFF
 }
