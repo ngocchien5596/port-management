@@ -70,3 +70,6 @@ temp/
 
 # Agent
 .agent/
+
+# Block npm lock file in monorepo
+**/package-lock.json

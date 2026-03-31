@@ -7,12 +7,10 @@ import { createServer } from 'http';
 import { initSocket, getIO } from './lib/socket';
 
 // Import routes
-import authRoutes from './routes/auth';
-import accountRoutes from './routes/accounts';
 import qltauRoutes from './routes/index';
 
 // Import middleware
-import { errorHandler } from './middleware/errorHandler';
+import { errorHandler, notFound } from './middleware/errorHandler';
 
 // Import cron jobs
 import { startNotificationCronJob } from './jobs/notification.cron';
@@ -54,9 +52,10 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/accounts', accountRoutes);
 app.use('/api', qltauRoutes);
+
+// 404 handler for unhandled API routes
+app.use(notFound);
 
 // Error handler
 app.use(errorHandler);
