@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { accountApi } from '@/features/accounts/api';
 import {
@@ -23,6 +24,7 @@ import { cn } from '@/lib/utils/cn';
 
 export default function ImportAccountContent() {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [file, setFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
@@ -76,6 +78,8 @@ export default function ImportAccountContent() {
 
             if (res.success) {
                 setImportResult(res.data);
+                // Invalidate query to refresh the accounts list
+                queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 toast.success(res.message || 'Nhập dữ liệu hoàn tất! ✨');
             } else {
                 toast.error(res.message || 'Import thất bại');
@@ -319,7 +323,7 @@ export default function ImportAccountContent() {
                                     Tiếp tục Nhập file
                                 </button>
                                 <button
-                                    onClick={() => window.location.href = '/accounts'}
+                                    onClick={() => router.push('/accounts')}
                                     className="px-8 py-3 bg-slate-900 hover:bg-black text-white text-sm font-black rounded-2xl transition-all shadow-lg active:scale-95 flex items-center gap-2"
                                 >
                                     <ArrowRight className="w-4 h-4" />

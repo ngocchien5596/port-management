@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
 import { Info, Loader2, AlertCircle } from 'lucide-react';
+import { getStatusConfig } from '@/constants/voyage';
 import { cn } from '@/lib/utils/cn';
 
 interface VoyageInfoCardProps {
@@ -56,18 +57,6 @@ export function VoyageInfoCard({ voyage }: VoyageInfoCardProps) {
         }
     };
 
-    const statusLabels: Record<string, string> = {
-        'NHAP': 'Nháp',
-        'THU_TUC': 'Làm thủ tục',
-        'DO_MON_DAU_VAO': 'Đo mớn đầu vào',
-        'LAY_MAU': 'Lấy mẫu hàng',
-        'LAM_HANG': 'Đang làm hàng',
-        'DO_MON_DAU_RA': 'Đo mớn đầu ra',
-        'HOAN_THANH': 'Hoàn thành',
-        'HUY_BO': 'Đã hủy',
-        'TAM_DUNG': 'Tạm dừng',
-    };
-
     const isReadOnly = voyage.status !== 'NHAP';
     const isVolumeReadOnly = voyage.status === 'LAM_HANG' || voyage.status === 'HOAN_THANH';
 
@@ -93,7 +82,7 @@ export function VoyageInfoCard({ voyage }: VoyageInfoCardProps) {
                     <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg border border-amber-100 text-[11px] text-amber-700 leading-relaxed shadow-sm">
                         <AlertCircle size={14} className="mt-0.5 shrink-0" />
                         <p>
-                            Chuyến tàu đang trong trạng thái <span className="font-bold underline">{statusLabels[voyage.status] || voyage.status}</span>.
+                            Chuyến tàu đang trong trạng thái <span className="font-bold underline">{getStatusConfig(voyage.status).label}</span>.
                             Thông tin định danh đã được khóa để đảm bảo toàn vẹn dữ liệu.
                         </p>
                     </div>

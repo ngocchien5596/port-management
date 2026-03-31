@@ -5,10 +5,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
             {/* Minimalist Header */}
-            <header className="h-16 bg-white border-b border-slate-200 flex items-center px-4 md:px-8 shrink-0 z-20 sticky top-0">
+            <header className="h-16 bg-white border-b border-slate-200 border-t-2 border-t-[#EE0033] flex items-center px-4 md:px-8 shrink-0 z-20 sticky top-0">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center shadow-lg shadow-brand/20">
-                        <Ship className="text-white w-6 h-6" strokeWidth={2.5} />
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-1.5 border border-slate-100 shadow-sm">
+                        <img src="/logo_new.png" alt="Logo" className="w-full h-full object-contain" />
                     </div>
                     <div>
                         <h1 className="text-base font-black text-slate-900 leading-tight uppercase tracking-tight">

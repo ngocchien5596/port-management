@@ -12,6 +12,7 @@ import { formatDateTime } from '@/lib/utils/date';
 import AddIncidentModal from '@/features/incidents/components/AddIncidentModal';
 import IncidentCard from '@/features/incidents/components/IncidentCard';
 import Link from 'next/link';
+import { useAuthStore } from '@/features/auth';
 
 const SEVERITY_MAP: Record<string, string> = {
     'RED': 'Nghiêm trọng / Dừng làm việc',
@@ -34,6 +35,7 @@ export default function IncidentLogPage() {
     const [filterDate, setFilterDate] = useState<Date | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const { user } = useAuthStore();
 
     const { data: incidents, isLoading } = useIncidents({
         scope: filterScope !== 'all' ? filterScope : undefined,
@@ -326,15 +328,17 @@ export default function IncidentLogPage() {
                                                             <CheckCircle size={14} />
                                                         </Button>
                                                     )}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                                                        onClick={() => setDeletingId(i.id)}
-                                                        title="Xóa báo cáo"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </Button>
+                                                    {(user?.role === 'MANAGER' || i.userId === user?.id) && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                                                            onClick={() => setDeletingId(i.id)}
+                                                            title="Xóa báo cáo"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

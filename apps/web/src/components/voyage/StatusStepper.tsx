@@ -1,14 +1,15 @@
 import React from 'react';
-import { Check, Clock, Play, AlertCircle } from 'lucide-react';
+import { Check, Clock, AlertCircle } from 'lucide-react';
+import { VOYAGE_STATUS_CONFIG } from '@/constants/voyage';
 import { cn } from '@/lib/utils/cn';
 
 const STEPS = [
-    { id: 'THU_TUC', label: 'Thủ tục', description: 'Clearance' },
-    { id: 'DO_MON_DAU_VAO', label: 'Đo mớn vào', description: 'Draft In' },
-    { id: 'LAY_MAU', label: 'Lấy mẫu', description: 'Sampling' },
-    { id: 'LAM_HANG', label: 'Làm hàng', description: 'Handling' },
-    { id: 'DO_MON_DAU_RA', label: 'Đo mớn ra', description: 'Draft Out' },
-    { id: 'HOAN_THANH', label: 'Hoàn thành', description: 'Completed' },
+    { id: 'THU_TUC', label: VOYAGE_STATUS_CONFIG.THU_TUC.label, description: VOYAGE_STATUS_CONFIG.THU_TUC.description },
+    { id: 'DO_MON_DAU_VAO', label: VOYAGE_STATUS_CONFIG.DO_MON_DAU_VAO.label, description: VOYAGE_STATUS_CONFIG.DO_MON_DAU_VAO.description },
+    { id: 'LAY_MAU', label: VOYAGE_STATUS_CONFIG.LAY_MAU.label, description: VOYAGE_STATUS_CONFIG.LAY_MAU.description },
+    { id: 'LAM_HANG', label: VOYAGE_STATUS_CONFIG.LAM_HANG.label, description: VOYAGE_STATUS_CONFIG.LAM_HANG.description },
+    { id: 'DO_MON_DAU_RA', label: VOYAGE_STATUS_CONFIG.DO_MON_DAU_RA.label, description: VOYAGE_STATUS_CONFIG.DO_MON_DAU_RA.description },
+    { id: 'HOAN_THANH', label: VOYAGE_STATUS_CONFIG.HOAN_THANH.label, description: VOYAGE_STATUS_CONFIG.HOAN_THANH.description },
 ];
 
 export default function StatusStepper({ currentStatus }: { currentStatus: string }) {

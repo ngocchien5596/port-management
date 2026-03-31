@@ -30,8 +30,11 @@ export default function VolumeReportPage() {
         const volumeByDate = (volumeData || []).reduce((acc: any, log: any) => {
             const dateKey = log.endTime ? format(new Date(log.endTime), 'yyyy-MM-dd') : 'unknown';
             if (!acc[dateKey]) acc[dateKey] = { date: dateKey };
-            const prodKey = log.productName || 'Khác';
-            acc[dateKey][prodKey] = (acc[dateKey][prodKey] || 0) + Number(log.amount || 0);
+            
+            // Fix: Group by shiftCode to match the chart's Bar dataKeys (CA_1, CA_2, CA_3)
+            const shiftKey = log.shiftCode || 'UNKNOWN';
+            acc[dateKey][shiftKey] = (acc[dateKey][shiftKey] || 0) + Number(log.amount || 0);
+            
             return acc;
         }, {});
 

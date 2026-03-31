@@ -14,16 +14,16 @@
         --pp-text: 263 67% 35%;      /* #4C1D95 (Deep Purple) */
 
         /* Viettel Red Brand */
-        --vt-primary: 230 30 35;
-        --vt-primary-hover: 216 27 32;
-        --vt-primary-pressed: 197 22 27;
-        --vt-primary-soft: 253 232 233;
-        --vt-primary-soft2: 250 209 211;
+        --vt-primary: 238 0 51;
+        --vt-primary-hover: 210 0 45;
+        --vt-primary-pressed: 180 0 38;
+        --vt-primary-soft: 255 235 238;
+        --vt-primary-soft2: 255 205 210;
 
         /* Standard Shadcn Overrides to Brand */
-        --primary: 0 77% 50%; /* Adjusted HSL for E61E23: 0, 77%, 50% */
+        --primary: 347 100% 47%; /* HSL for #EE0033: 347, 100%, 46.7% */
         --primary-foreground: 0 0% 100%;
-        --ring: 0 77% 50%;
+        --ring: 347 100% 47%;
 
         /* Text & Surface */
         --vt-text-primary: 17 24 39;
@@ -47,12 +47,12 @@
         --vt-success-soft: 234 247 239;
         --vt-warning: 245 158 11;
         --vt-warning-soft: 255 244 221;
-        --vt-danger: 230 30 35;
+        --vt-danger: 238 0 51;
         --vt-danger-soft: 253 232 233;
         --vt-info: 37 99 235;
         --vt-info-soft: 234 242 255;
 
-        --vt-focus: 230 30 35 / 0.35;
+        --vt-focus: 238 0 51 / 0.35;
 
         /* Legacy Shadcn Compatibility */
         --background: 0 0% 100%;

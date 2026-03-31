@@ -29,7 +29,7 @@ export default function CreateAccountContent() {
         fullName: '',
         employeeCode: '',
         email: '',
-        role: 'EMPLOYEE',
+        role: 'STAFF',
         password: '',
     });
 
@@ -204,10 +204,8 @@ export default function CreateAccountContent() {
                                                 onChange={handleChange}
                                                 className="block w-full h-12 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-2xl text-[15px] font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all appearance-none cursor-pointer"
                                             >
-                                                <option value="EMPLOYEE">NHÂN VIÊN (MẶC ĐỊNH)</option>
-                                                <option value="ADMIN_SYSTEM">ADMIN HỆ THỐNG</option>
-                                                <option value="ADMIN_KITCHEN">ADMIN NHÀ ĂN</option>
-                                                <option value="HR">NHÂN SỰ (HR)</option>
+                                                <option value="STAFF">NHÂN VIÊN</option>
+                                                <option value="MANAGER">QUẢN LÝ</option>
                                             </select>
                                             <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
                                                 <ChevronLeft className="w-4 h-4 -rotate-90" />

@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/features/auth';
 import { Eye, EyeOff } from 'lucide-react';
 
-// Placeholder for background image
-const bgUrl = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80";
+// Professional port-themed background
+const bgUrl = "/login_bg.png";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -44,8 +44,8 @@ export default function LoginPage() {
             {/* Header */}
             <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 shrink-0 z-20">
                 {/* Logo container */}
-                <div className="w-11 h-11 bg-white rounded flex items-center justify-center overflow-hidden border border-gray-100">
-                    <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                <div className="w-11 h-11 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-gray-100 p-1 shadow-sm">
+                    <img src="/logo_new.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
 
                 {/* Title */}
@@ -68,11 +68,11 @@ export default function LoginPage() {
                     backgroundPosition: 'center',
                 }}
             >
-                {/* Dark overlay */}
-                <div className="absolute inset-0 bg-black/60 z-0" />
+                {/* Dark overlay with subtle blur */}
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] z-0" />
 
-                {/* Login card */}
-                <div className="relative z-10 w-full max-w-[480px] bg-white rounded-xl shadow-2xl p-10">
+                {/* Login card - Refined Professional Design */}
+                <div className="relative z-10 w-full max-w-[480px] bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-10 border border-white/20">
                     <div className="text-center mb-10">
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Đăng nhập</h2>
                         <p className="text-gray-500 italic text-sm">Vui lòng đăng nhập để truy cập hệ thống quản trị</p>
@@ -162,18 +162,6 @@ export default function LoginPage() {
                             >
                                 {isLoading ? 'Đang xác thực...' : 'ĐĂNG NHẬP'}
                             </button>
-
-                            <button
-                                type="button"
-                                onClick={() => router.push('/track')}
-                                className="w-full h-12 bg-white border-2 border-brand text-brand hover:bg-brand-soft font-bold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer"
-                            >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform">
-                                    <circle cx="11" cy="11" r="8" />
-                                    <path d="m21 21-4.3-4.3" />
-                                </svg>
-                                Tra cứu hành trình tàu
-                            </button>
                         </div>
 
                         {/* Help Link */}
@@ -182,7 +170,7 @@ export default function LoginPage() {
                                 href="#"
                                 className="inline-block mt-4 text-brand font-medium underline text-sm hover:text-brand-hover transition-colors cursor-pointer"
                             >
-                                Quên mật khẩu?
+                                Quên mật khẩu? Liên hệ Admin để cấp lại.
                             </a>
                         </div>
                     </form>

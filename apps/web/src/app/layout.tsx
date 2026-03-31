@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="vi" suppressHydrationWarning>
-            <body className={`${roboto.className} text-[13px]`}>
+            <body className={`${roboto.className} text-sm`}>
                 <Providers>
                     {children}
                     <div id="datepicker-portal" />

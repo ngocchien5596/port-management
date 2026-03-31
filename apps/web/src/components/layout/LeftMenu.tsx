@@ -81,32 +81,32 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
     { key: 'dashboard', label: 'Bảng điều khiển', href: '/dashboard', icon: DashboardIcon },
-    { key: 'voyages', label: 'Quản lý chuyến tàu', href: '/voyages', icon: VoyageIcon, roles: ['PORT_OPERATOR', 'ADMIN_SYSTEM'] },
-    { key: 'incidents', label: 'Nhật ký sự cố', href: '/incidents', icon: IncidentIcon, roles: ['PORT_OPERATOR', 'ADMIN_SYSTEM'] },
+    { key: 'voyages', label: 'Quản lý chuyến tàu', href: '/voyages', icon: VoyageIcon, roles: ['MANAGER', 'STAFF'] },
+    { key: 'vessels', label: 'Danh mục tàu', href: '/vessels', icon: VesselIcon, roles: ['MANAGER', 'STAFF'] },
+    { key: 'incidents', label: 'Nhật ký sự cố', href: '/incidents', icon: IncidentIcon, roles: ['MANAGER', 'STAFF'] },
     {
         key: 'reports',
         label: 'Báo cáo & KPI',
         icon: Package,
-        roles: ['PORT_OPERATOR', 'ADMIN_SYSTEM'],
+        roles: ['MANAGER', 'STAFF'],
         children: [
-            { key: 'volumeReport', label: 'Báo Cáo Sản lượng', href: '/reports/volume', icon: Package, roles: ['PORT_OPERATOR', 'ADMIN_SYSTEM'] },
-            { key: 'productivityPort', label: 'Năng suất Toàn Cảng', href: '/reports/productivity/port', icon: BarChart3, roles: ['PORT_OPERATOR', 'ADMIN_SYSTEM'] },
-            { key: 'productivityEquipment', label: 'Năng suất Thiết bị', href: '/reports/productivity/equipment', icon: Activity, roles: ['PORT_OPERATOR', 'ADMIN_SYSTEM'] }
+            { key: 'volumeReport', label: 'Báo Cáo Sản lượng', href: '/reports/volume', icon: Package, roles: ['MANAGER', 'STAFF'] },
+            { key: 'productivityPort', label: 'Năng suất Toàn Cảng', href: '/reports/productivity/port', icon: BarChart3, roles: ['MANAGER', 'STAFF'] },
+            { key: 'productivityEquipment', label: 'Năng suất Thiết bị', href: '/reports/productivity/equipment', icon: Activity, roles: ['MANAGER', 'STAFF'] }
         ]
     },
     {
         key: 'systemConfig',
         label: 'Cấu hình hệ thống',
         icon: SettingsIcon,
-        roles: ['ADMIN_SYSTEM'],
+        roles: ['MANAGER', 'STAFF'], // Allow parents but children will be restricted
         children: [
-            { key: 'vessels', label: 'Danh mục tàu', href: '/vessels', icon: VesselIcon, roles: ['PORT_OPERATOR', 'ADMIN_SYSTEM'] },
-            { key: 'cargoTypes', label: 'Loại hàng', href: '/config/cargo-types', icon: Package, roles: ['ADMIN_SYSTEM'] },
-            { key: 'lanes', label: 'Quản lý luồng', href: '/config/lanes', icon: Map, roles: ['ADMIN_SYSTEM'] },
-            { key: 'equipment', label: 'Thiết bị cẩu', href: '/config/equipment', icon: Cpu, roles: ['ADMIN_SYSTEM'] },
-            { key: 'procedureTime', label: 'Thời gian thủ tục', href: '/config/procedure-time', icon: SettingsIcon, roles: ['ADMIN_SYSTEM'] },
-            { key: 'shifts', label: 'Cấu hình ca làm việc', href: '/config/shifts', icon: SettingsIcon, roles: ['ADMIN_SYSTEM'] },
-            { key: 'accounts', label: 'Cấp tài khoản', href: '/accounts', icon: IdCardIcon, roles: ['HR', 'ADMIN_SYSTEM'] },
+            { key: 'cargoTypes', label: 'Loại hàng', href: '/config/cargo-types', icon: Package, roles: ['MANAGER', 'STAFF'] },
+            { key: 'lanes', label: 'Quản lý luồng', href: '/config/lanes', icon: Map, roles: ['MANAGER'] },
+            { key: 'equipment', label: 'Thiết bị cẩu', href: '/config/equipment', icon: Cpu, roles: ['MANAGER'] },
+            { key: 'procedureTime', label: 'Thời gian thủ tục', href: '/config/procedure-time', icon: SettingsIcon, roles: ['MANAGER'] },
+            { key: 'shifts', label: 'Cấu hình ca làm việc', href: '/config/shifts', icon: SettingsIcon, roles: ['MANAGER'] },
+            { key: 'accounts', label: 'Cấp tài khoản', href: '/accounts', icon: IdCardIcon, roles: ['MANAGER'] },
             { key: 'password', label: 'Đổi mật khẩu', href: '/change-password', icon: LockIcon },
         ]
     },

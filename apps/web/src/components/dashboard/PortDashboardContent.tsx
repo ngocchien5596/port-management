@@ -13,92 +13,7 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import EmergencyOverrideModal from './EmergencyOverrideModal';
 
-// --- HELPER COMPONENTS & FUNCTIONS ---
-
-const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d={path} />
-    </svg>
-);
-
-const PATHS = {
-    ship: "M2 21h20M2 17h20M5 17l1.5-4h11l1.5 4M9 13V9a2 2 0 012-2h2a2 2 0 012 2v4",
-    crane: "M12 2v20M5 7l7-5 7 5M5 7v10h14V7M2 17h20",
-    alert: "M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01",
-    activity: "M22 12h-4l-3 9L9 3l-3 9H2",
-    clock: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
-    check: "M20 6L9 17l-5-5",
-    arrowRight: "M5 12h14M12 5l7 7-7 7",
-    anchor: "M12 2v6M12 22v-3m-6.17-5a6.27 6.27 0 0012.34 0M2 12h20",
-    package: "M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z",
-};
-
-const mapStatus = (dbStatus: string) => {
-    switch (dbStatus) {
-        case 'LAM_HANG': return 'LOADING';
-        case 'TAM_DUNG': return 'DELAY';
-        case 'HOAN_THANH': return 'DEPARTED';
-        case 'HUY_BO': return 'CANCELLED';
-        case 'NHAP':
-        case 'THU_TUC':
-        case 'DO_MON_DAU_VAO':
-        case 'LAY_MAU':
-        case 'DO_MON_DAU_RA':
-            return 'WAITING';
-        default: return dbStatus;
-    }
-};
-
-const getStatusStyles = (status: string) => {
-    const uiStatus = mapStatus(status).toUpperCase();
-    switch (uiStatus) {
-        case 'LOADING': case 'ACTIVE': case 'NORMAL': case 'BUSY':
-            return {
-                bg: 'bg-emerald-500/10', text: 'text-emerald-700', border: 'border-emerald-500/20', dot: 'bg-emerald-500',
-                solidBg: 'bg-emerald-600', solidText: 'text-white'
-            };
-        case 'WAITING': case 'IDLE': case 'WARNING':
-            return {
-                bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200', dot: 'bg-slate-400',
-                solidBg: 'bg-slate-500', solidText: 'text-white'
-            };
-        case 'DELAY': case 'ERROR': case 'MAINTENANCE': case 'REPAIR':
-            return {
-                bg: 'bg-red-500/10', text: 'text-red-700', border: 'border-red-500/20', dot: 'bg-red-500',
-                solidBg: 'bg-red-600', solidText: 'text-white'
-            };
-        case 'DEPARTED':
-            return {
-                bg: 'bg-blue-500/10', text: 'text-blue-700', border: 'border-blue-500/20', dot: 'bg-blue-500',
-                solidBg: 'bg-blue-600', solidText: 'text-white'
-            };
-        default:
-            return {
-                bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200', dot: 'bg-slate-400',
-                solidBg: 'bg-slate-500', solidText: 'text-white'
-            };
-    }
-};
-
-const STATUS_LABELS: Record<string, string> = {
-    'LOADING': 'Làm hàng',
-    'WAITING': 'Đang chờ',
-    'DELAY': 'Chậm trễ',
-    'DEPARTED': 'Đã rời bến',
-    'ACTIVE': 'Hoạt động',
-    'IDLE': 'Đang rảnh',
-    'MAINTENANCE': 'Bảo trì',
-    'ERROR': 'Lỗi',
-    'NORMAL': 'Bình thường',
-    'WARNING': 'Cảnh báo',
-    'CANCELLED': 'Hủy bỏ',
-    'REPAIR': 'Sửa chữa',
-};
-
-const getStatusLabel = (status: string) => {
-    const uiStatus = mapStatus(status).toUpperCase();
-    return STATUS_LABELS[uiStatus] || status;
-};
+import { Icon, PATHS, mapStatus, getStatusStyles, getStatusLabel } from './dashboard-utils';
 
 // --- COMPONENT PORTDASHBOARD ---
 
@@ -139,16 +54,20 @@ export default function PortDashboardContent() {
 
         // Find voyages in this lane's queue
         const laneQueue = localVoyages
-            .filter(v => v.laneId === laneId && !['HOAN_THANH', 'HUY_BO', 'LAM_HANG', 'TAM_DUNG'].includes(v.status))
+            .filter(v => v.laneId === laneId && !['HOAN_THANH', 'HUY_BO', 'LAM_HANG'].includes(v.status))
             .sort((a, b) => (a.queueNo || 0) - (b.queueNo || 0));
 
         const [movedItem] = laneQueue.splice(sourceIndex, 1);
         laneQueue.splice(destinationIndex, 0, movedItem);
 
+        // Find existing serving trips to offset the queueNo
+        const servingTrips = localVoyages.filter(v => v.laneId === laneId && ['LAM_HANG'].includes(v.status));
+        const maxServingQueueNo = servingTrips.length > 0 ? Math.max(...servingTrips.map(v => v.queueNo || 0)) : 0;
+
         // Calculate new queueNos
         const updates = laneQueue.map((v, index) => ({
             id: v.id,
-            queueNo: index + 1
+            queueNo: maxServingQueueNo + index + 1
         }));
 
         // Optimistic update
@@ -322,8 +241,8 @@ export default function PortDashboardContent() {
                         <span className="text-2xl font-black text-slate-900 tracking-tight">{totalActiveVessels}</span>
                     </div>
                     <div className="flex gap-2 mt-2">
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">{currentData.vesselStats.loading} Làm hàng</span>
-                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">{currentData.vesselStats.waiting} Đang chờ</span>
+                        <span className="text-[12px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">{currentData.vesselStats.loading} Làm hàng</span>
+                        <span className="text-[12px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">{currentData.vesselStats.waiting} Đang chờ</span>
                     </div>
                 </div>
 
@@ -352,8 +271,8 @@ export default function PortDashboardContent() {
                         <span className="font-medium text-slate-400">/ {currentData.deviceStats.total}</span>
                     </div>
                     <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2">
-                        <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>{currentData.deviceStats.busy} Đang hoạt động</span>
-                        <span className="text-[10px] font-bold text-red-600 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>{currentData.deviceStats.error} Lỗi</span>
+                        <span className="text-[12px] font-bold text-emerald-600 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>{currentData.deviceStats.busy} Đang hoạt động</span>
+                        <span className="text-[12px] font-bold text-red-600 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>{currentData.deviceStats.error} Lỗi</span>
                     </div>
                 </div>
 
@@ -382,8 +301,8 @@ export default function PortDashboardContent() {
                         {lanes?.map((lane: Lane) => {
                             const laneCranes = lane.equipments || [];
                             const laneTrips = localVoyages.filter((v: Voyage) => v.laneId === lane.id && !['HOAN_THANH', 'HUY_BO'].includes(v.status));
-                            const servingTrips = laneTrips.filter(v => ['LAM_HANG', 'TAM_DUNG'].includes(v.status));
-                            const queueTrips = laneTrips.filter(v => !['LAM_HANG', 'TAM_DUNG'].includes(v.status)).sort((a, b) => (a.queueNo || 0) - (b.queueNo || 0));
+                            const servingTrips = laneTrips.filter(v => ['LAM_HANG'].includes(v.status));
+                            const queueTrips = laneTrips.filter(v => !['LAM_HANG'].includes(v.status)).sort((a, b) => (a.queueNo || 0) - (b.queueNo || 0));
                             const laneStatus = servingTrips.length > 0 ? 'NORMAL' : 'IDLE';
 
                             const renderTripCard = (trip: Voyage, isQueue: boolean, queueIndex: number) => {
@@ -399,31 +318,17 @@ export default function PortDashboardContent() {
                                     isWarning = diffMs > 120 * 60 * 1000;
                                 }
 
-                                const emergencyTripWaiting = queueTrips.find(v => v.priority === 'EMERGENCY');
-                                const isHandlingAndEmergencyWaiting = !isQueue && mapStatus(trip.status) === 'LOADING' && !!emergencyTripWaiting;
+                                const isUrgent = trip.priority === 'EMERGENCY';
+                                const isEmergencyWaitingToOverride = isQueue && isUrgent && servingTrips.length > 0;
 
                                 return (
                                     <div
                                         key={trip.id}
                                         onClick={() => setSelectedVoyageId(trip.id)}
-                                        className={`w-full bg-white rounded-lg border shadow-sm hover:shadow-md hover:border-[#00695C] cursor-pointer transition-all relative overflow-hidden group shrink-0 ${isWarning ? 'border-red-300 bg-red-50/30' : 'border-slate-200'} ${isHandlingAndEmergencyWaiting ? 'pt-8 pb-3 px-3' : 'p-3'}`}
+                                        className={`w-full bg-white rounded-lg border shadow-sm hover:shadow-md hover:border-[#00695C] cursor-pointer transition-all relative overflow-hidden group shrink-0 ${isWarning ? 'border-red-300 bg-red-50/30' : isUrgent ? 'border-slate-200 bg-rose-50/50' : 'border-slate-200'} p-3`}
                                     >
-                                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${isWarning ? 'bg-red-500' : tStyles.solidBg} transition-colors group-hover:w-2 ${isHandlingAndEmergencyWaiting ? 'z-20' : ''}`}></div>
+                                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${tStyles.solidBg} transition-colors group-hover:w-2`}></div>
 
-                                        {isHandlingAndEmergencyWaiting && (
-                                            <div className="absolute top-0 right-0 left-0 bg-red-600 text-white text-[10px] font-bold text-center py-1.5 tracking-widest z-10 flex items-center justify-center gap-1.5 hover:bg-red-700 hover:cursor-pointer transition-colors shadow-sm"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setEmergencyOverrideState({
-                                                        currentVoyage: trip,
-                                                        emergencyVoyage: emergencyTripWaiting!,
-                                                    });
-                                                }}
-                                            >
-                                                <Icon path={PATHS.alert} className="w-3.5 h-3.5" />
-                                                KHẨN CẤP
-                                            </div>
-                                        )}
 
                                         <div className="flex justify-between items-start mb-2 pl-2">
                                             <div className="flex items-start gap-2 max-w-[72%]">
@@ -432,28 +337,35 @@ export default function PortDashboardContent() {
                                                         #{queueIndex}
                                                     </div>
                                                 )}
-                                                <div>
-                                                    <h4 className="text-[15px] font-black text-slate-900 group-hover:text-[#00695C] transition-colors uppercase leading-tight tracking-tight truncate" title={`${trip.voyageCode}${trip.vessel?.code ? ` - ${trip.vessel.code}` : ''}`}>
-                                                        {trip.voyageCode}{trip.vessel?.code ? ` - ${trip.vessel.code}` : ''}
-                                                    </h4>
-                                                    <p className="text-[11px] font-medium text-slate-500 mt-0.5 truncate" title={trip.product?.name || 'Chưa rõ hàng hóa'}>{trip.product?.name || 'Chưa rõ hàng hóa'}</p>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <h4 className={`text-[15px] font-black uppercase leading-tight tracking-tight truncate ${isUrgent ? 'text-rose-700' : 'text-slate-900 group-hover:text-[#00695C] transition-colors'}`} title={`${trip.voyageCode}${trip.vessel?.code ? ` - ${trip.vessel.code}` : ''}`}>
+                                                            {trip.voyageCode}{trip.vessel?.code ? ` - ${trip.vessel.code}` : ''}
+                                                        </h4>
+                                                        {isUrgent && (
+                                                            <div className="flex bg-rose-100 rounded-full w-5 h-5 items-center justify-center shrink-0" title="Chuyến tàu Khẩn Cấp">
+                                                                <Icon path={PATHS.alert} className="w-3 h-3 text-rose-600 animate-pulse" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[13px] font-medium text-slate-500 mt-0.5 truncate" title={trip.product?.name || 'Chưa rõ hàng hóa'}>{trip.product?.name || 'Chưa rõ hàng hóa'}</p>
                                                 </div>
                                             </div>
-                                            <span className={`px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap font-medium border ${tStyles.bg} ${tStyles.text} ${tStyles.border}`}>
+                                            <span className={`px-1.5 py-0.5 rounded text-[12px] whitespace-nowrap font-medium border ${tStyles.bg} ${tStyles.text} ${tStyles.border}`}>
                                                 {getStatusLabel(trip.status)}
                                             </span>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-2 mb-3 bg-slate-50 p-1.5 rounded-md border border-slate-100 pl-3">
                                             <div>
-                                                <p className="text-[10px] font-medium text-slate-400 mb-0.5">ETA</p>
-                                                <p className={`text-[11px] font-semibold font-mono ${isWarning ? 'text-red-600' : 'text-slate-700'}`}>
+                                                <p className="text-[12px] font-medium text-slate-400 mb-0.5">ETA</p>
+                                                <p className={`text-[13px] font-semibold font-mono ${isWarning ? 'text-red-600' : 'text-slate-700'}`}>
                                                     {trip.eta ? formatDateTime(trip.eta) : '---'}
                                                 </p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-medium text-slate-400 mb-0.5">ETD</p>
-                                                <p className="text-[11px] font-semibold text-slate-700 font-mono">
+                                                <p className="text-[12px] font-medium text-slate-400 mb-0.5">ETD</p>
+                                                <p className="text-[13px] font-semibold text-slate-700 font-mono">
                                                     {trip.etd ? formatDateTime(trip.etd) : '---'}
                                                 </p>
                                             </div>
@@ -461,8 +373,8 @@ export default function PortDashboardContent() {
 
                                         <div className="pl-2">
                                             <div className="flex justify-between items-baseline mb-1">
-                                                <span className="text-[10px] font-medium text-slate-400">Tiến độ</span>
-                                                <span className="text-[11px] font-semibold font-mono text-slate-700">
+                                                <span className="text-[12px] font-medium text-slate-400">Tiến độ</span>
+                                                <span className="text-[13px] font-semibold font-mono text-slate-700">
                                                     <span className="text-[#00695C]">{totalDone.toLocaleString()}</span> / {volume.toLocaleString()}T
                                                 </span>
                                             </div>
@@ -470,6 +382,24 @@ export default function PortDashboardContent() {
                                                 <div className="bg-[#00695C] h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
                                             </div>
                                         </div>
+
+                                        {isEmergencyWaitingToOverride && (
+                                            <div className="mt-3 pt-2 pl-2 border-t border-rose-200/60">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEmergencyOverrideState({
+                                                            currentVoyage: servingTrips[0],
+                                                            emergencyVoyage: trip,
+                                                        });
+                                                    }}
+                                                    className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold text-[11px] transition-colors shadow-sm tracking-wide"
+                                                >
+                                                    <Icon path={PATHS.alert} className="w-3.5 h-3.5" />
+                                                    ⚡ YÊU CẦU CẨU
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             };
@@ -482,7 +412,7 @@ export default function PortDashboardContent() {
                                         <div className="flex justify-between items-center">
                                             <div className="flex items-center gap-1.5">
                                                 <h3 className="font-semibold text-white">{lane.name}</h3>
-                                                <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${laneStatus === 'NORMAL' ? 'bg-emerald-500/20 text-emerald-100 border border-emerald-500/30' : 'bg-white/10 text-slate-300 border border-white/20'}`}>
+                                                <span className={`px-1.5 py-0.5 rounded text-[13px] font-medium ${laneStatus === 'NORMAL' ? 'bg-emerald-500/20 text-emerald-100 border border-emerald-500/30' : 'bg-white/10 text-slate-300 border border-white/20'}`}>
                                                     {getStatusLabel(laneStatus)}
                                                 </span>
                                             </div>
@@ -502,7 +432,7 @@ export default function PortDashboardContent() {
                                                     return (
                                                         <div key={crane.id} className="flex items-center gap-1.5 bg-black/20 px-2.5 py-1 rounded border border-white/10" title={getStatusLabel(crane.status)}>
                                                             <span className={`w-1.5 h-1.5 rounded-full ${cw}`}></span>
-                                                            <span className="text-[10px] font-bold font-mono">{crane.name.replace('STS-', '')}</span>
+                                                            <span className="text-[12px] font-bold font-mono">{crane.name.replace('STS-', '')}</span>
                                                         </div>
                                                     );
                                                 })}
@@ -516,14 +446,14 @@ export default function PortDashboardContent() {
                                             <div className="w-full flex-1 flex flex-col items-center justify-center p-6 rounded-lg text-slate-400">
                                                 <Icon path={PATHS.anchor} className="w-8 h-8 opacity-20 mb-2" />
                                                 <span className="font-semibold text-slate-500">Chưa có tàu</span>
-                                                <span className="text-[10px] font-medium mt-1">Sẵn sàng tiếp nhận</span>
+                                                <span className="text-[12px] font-medium mt-1">Sẵn sàng tiếp nhận</span>
                                             </div>
                                         ) : (
                                             <div className="w-full flex flex-col gap-4">
                                                 {/* SERVING SECTION */}
                                                 {servingTrips.length > 0 && (
                                                     <div className="w-full">
-                                                        <h4 className="text-[11px] font-black text-emerald-700 uppercase tracking-widest mb-2 pl-2 border-l-2 border-emerald-500 pb-0.5">Đang làm hàng</h4>
+                                                        <h4 className="text-[13px] font-black text-emerald-700 uppercase tracking-widest mb-2 pl-2 border-l-2 border-emerald-500 pb-0.5">Đang làm hàng</h4>
                                                         <div className="flex flex-col gap-2">
                                                             {servingTrips.map((trip: Voyage) => renderTripCard(trip, false, 0))}
                                                         </div>
@@ -532,7 +462,7 @@ export default function PortDashboardContent() {
 
                                                 {/* QUEUE SECTION */}
                                                 <div className="w-full flex-1">
-                                                    <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 pl-2 border-l-2 border-slate-300 pb-0.5 mt-2">Hàng đợi ({queueTrips.length})</h4>
+                                                    <h4 className={`text-[13px] font-black text-slate-500 uppercase tracking-widest mb-2 pl-2 border-l-2 border-slate-300 pb-0.5 ${servingTrips.length > 0 ? 'mt-2' : ''}`}>Hàng đợi ({queueTrips.length})</h4>
                                                     <Droppable droppableId={lane.id}>
                                                         {(provided: any) => (
                                                             <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col gap-2 min-h-[100px]">
@@ -596,7 +526,7 @@ export default function PortDashboardContent() {
                                         <div>
                                             <div className="flex items-center gap-3 mb-4">
                                                 <h3 className="text-2xl font-bold text-slate-900 leading-none">{trip.voyageCode}{trip.vessel?.code ? ` - ${trip.vessel.code}` : ''}</h3>
-                                                <span className={`px-2 py-1 rounded text-[11px] font-medium border ${tStyles.bg} ${tStyles.text} ${tStyles.border}`}>
+                                                <span className={`px-2 py-1 rounded text-[13px] font-medium border ${tStyles.bg} ${tStyles.text} ${tStyles.border}`}>
                                                 {getStatusLabel(trip.status)}
                                             </span>
                                             </div>
@@ -623,7 +553,7 @@ export default function PortDashboardContent() {
                                                 <p className="font-semibold text-slate-700 font-mono mt-auto">{trip.eta ? formatDateTime(trip.eta) : 'Chưa có'}</p>
                                             </div>
                                             <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 flex flex-col items-center text-center">
-                                                <p className="font-medium text-slate-400 mb-1 leading-[1.1]">ETD<br /><span className="text-[11px] opacity-70">(Lý thuyết)</span></p>
+                                                <p className="font-medium text-slate-400 mb-1 leading-[1.1]">ETD<br /><span className="text-[13px] opacity-70">(Lý thuyết)</span></p>
                                                 <p className="font-semibold text-slate-700 font-mono mt-auto">{(trip as any).theoreticalEtd ? formatDateTime((trip as any).theoreticalEtd) : '---'}</p>
                                             </div>
                                             <div className="relative group p-3 bg-slate-50 hover:bg-white rounded-lg border border-slate-100 hover:border-[#00695C] transition-all flex flex-col items-center text-center cursor-help">
@@ -633,10 +563,10 @@ export default function PortDashboardContent() {
                                                             <p className="font-bold text-xs text-slate-800">ETD Thực tế</p>
                                                             <div className="w-1.5 h-1.5 rounded-full bg-[#00695C] animate-pulse"></div>
                                                         </div>
-                                                        <p className="text-[10px] text-slate-500 leading-relaxed">
+                                                        <p className="text-[12px] text-slate-500 leading-relaxed">
                                                             Thời gian rời bến được tính toán liên tục dựa trên <strong className="text-slate-700">Công suất TB thực tế của thiết bị</strong> và thời gian xảy ra <strong className="text-slate-700">Sự cố</strong>.
                                                         </p>
-                                                        <div className="bg-slate-50 p-2 rounded text-[10px] font-mono text-slate-600 border border-slate-100 leading-relaxed">
+                                                        <div className="bg-slate-50 p-2 rounded text-[12px] font-mono text-slate-600 border border-slate-100 leading-relaxed">
                                                             <span className="text-slate-400">// Công thức</span><br />
                                                             <span>+ Thời gian kết thúc của bản ghi sản lượng mới nhất</span><br />
                                                             <span>+ (Sản lượng còn lại / Công suất TB thực tế của thiết bị)</span><br />
@@ -646,7 +576,7 @@ export default function PortDashboardContent() {
                                                     </div>
                                                     <div className="absolute -bottom-1.5 right-[50px] w-3 h-3 bg-white border-b border-r border-slate-200 rotate-45"></div>
                                                 </div>
-                                                <p className="text-[10px] text-slate-400 group-hover:text-[#00695C] uppercase font-black tracking-widest mb-1 leading-[1.1] transition-colors">
+                                                <p className="text-[12px] text-slate-400 group-hover:text-[#00695C] uppercase font-black tracking-widest mb-1 leading-[1.1] transition-colors">
                                                     ETD<br /><span className="text-[8px] opacity-70 group-hover:opacity-100">(Thực tế)</span>
                                                 </p>
                                                 <p className="text-xs font-bold text-slate-700 group-hover:text-emerald-700 font-mono mt-auto transition-colors">
@@ -697,8 +627,8 @@ export default function PortDashboardContent() {
                                                                 <span>{formatDateTime(event.createdAt).split(' ')[0]}</span>
                                                             </div>
                                                             <div className="flex-1 bg-slate-50 px-2 py-1.5 rounded border border-slate-100">
-                                                                <div className="font-bold text-slate-700 text-[11px] mb-0.5">{event.title}</div>
-                                                                <div className="text-slate-500 text-[10px] leading-snug">{event.description}</div>
+                                                                <div className="font-bold text-slate-700 text-[13px] mb-0.5">{event.title}</div>
+                                                                <div className="text-slate-500 text-[12px] leading-snug">{event.description}</div>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -784,7 +714,7 @@ export default function PortDashboardContent() {
                                 <h3 className="text-base font-black uppercase tracking-tight text-slate-800">Clog & Alerts System</h3>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">{currentData.alerts.length}</span>
+                                <span className="text-[12px] font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">{currentData.alerts.length}</span>
                                 <button onClick={() => setIsAlertModalOpen(false)} className="p-1 rounded-full hover:bg-slate-200 text-slate-500 transition-colors">
                                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                                 </button>
@@ -806,11 +736,11 @@ export default function PortDashboardContent() {
                                     return (
                                         <div key={idx} className={`p-4 rounded-xl border ${isRed ? 'bg-red-50 border-red-500/30' : 'bg-orange-50 border-orange-400/30'} shadow-sm`}>
                                             <div className="flex justify-between items-start mb-2">
-                                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${isRed ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[12px] font-black uppercase tracking-widest ${isRed ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${isRed ? 'bg-red-500' : 'bg-orange-500'}`}></span>
                                                     {alert.type === 'incident' ? 'Sự cố' : alert.type === 'equipment' ? 'Thiết bị' : 'Tàu trễ'}
                                                 </span>
-                                                <span className="text-[10px] font-bold text-slate-500 font-mono bg-white px-2 py-0.5 rounded border border-slate-200">{alert.time}</span>
+                                                <span className="text-[12px] font-bold text-slate-500 font-mono bg-white px-2 py-0.5 rounded border border-slate-200">{alert.time}</span>
                                             </div>
                                             <p className="text-sm font-bold text-slate-800 leading-snug">{alert.title}</p>
                                         </div>

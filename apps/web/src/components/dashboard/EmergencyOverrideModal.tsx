@@ -12,13 +12,7 @@ interface Props {
     onClose: () => void;
 }
 
-const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d={path} />
-    </svg>
-);
-
-const alertPath = "M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01";
+import { Icon, PATHS } from './dashboard-utils';
 
 export default function EmergencyOverrideModal({ currentVoyage, emergencyVoyage, onClose }: Props) {
     const overrideMutation = useOverrideEquipment();
@@ -90,7 +84,7 @@ export default function EmergencyOverrideModal({ currentVoyage, emergencyVoyage,
                 {/* Header */}
                 <div className="bg-red-600 text-white px-6 py-4 flex items-center gap-3">
                     <div className="bg-white/20 p-2 rounded-full">
-                        <Icon path={alertPath} className="w-6 h-6 text-white" />
+                        <Icon path={PATHS.alert} className="w-6 h-6 text-white" />
                     </div>
                     <div>
                         <h2 className="text-xl font-bold tracking-tight shadow-sm">Yêu Cầu Nhường Cẩu Khẩn Cấp</h2>

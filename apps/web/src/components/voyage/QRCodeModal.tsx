@@ -18,7 +18,7 @@ export default function QRCodeModal({ isOpen, onClose, voyage }: QRCodeModalProp
     const [isCopied, setIsCopied] = useState(false);
 
     const trackingUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}/track/${voyage.id}?code=${voyage.voyageCode}&phone=${voyage.vessel?.customerPhone || ''}`
+        ? `${window.location.origin}/track/${voyage.id}`
         : '';
 
     useEffect(() => {

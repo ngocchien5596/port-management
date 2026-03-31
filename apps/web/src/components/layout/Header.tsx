@@ -55,8 +55,8 @@ export function Header({ user, userRole }: HeaderProps) {
                         <Menu size={24} />
                     </button>
 
-                    <div className="w-10 h-10 md:w-11 md:h-11 bg-white rounded flex items-center justify-center overflow-hidden border border-gray-100">
-                        <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                    <div className="w-10 h-10 md:w-11 md:h-11 bg-white rounded flex items-center justify-center overflow-hidden border border-gray-100 p-1">
+                        <img src="/logo_new.png" alt="Logo" className="w-full h-full object-contain" />
                     </div>
                     <div className="ml-3 md:ml-4">
                         <h1 className="text-base md:text-lg font-bold text-gray-900 leading-tight line-clamp-1">
@@ -108,8 +108,8 @@ export function Header({ user, userRole }: HeaderProps) {
                     <div className="absolute top-0 left-0 bottom-0 w-[80%] max-w-[300px] bg-white shadow-2xl animate-in slide-in-from-left duration-200 flex flex-col">
                         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-200">
-                                    <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                                <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-200 p-0.5">
+                                    <img src="/logo_new.png" alt="Logo" className="w-full h-full object-contain" />
                                 </div>
                                 <span className="font-bold text-gray-800 text-lg">Menu</span>
                             </div>

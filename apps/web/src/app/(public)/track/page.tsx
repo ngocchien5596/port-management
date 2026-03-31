@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Ship, Search, Phone, ArrowLeft, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import axios from 'axios';
+import { api } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 
 export default function PublicSearchPage() {
@@ -24,16 +24,23 @@ export default function PublicSearchPage() {
 
         setIsLoading(true);
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/public/voyage-track`, {
+            const response = await api.get<any>(`/public/voyage-track`, {
                 params: { voyageCode, phone }
             });
 
-            if (response.data?.id) {
-                router.push(`/track/${response.data.id}?code=${voyageCode}&phone=${phone}`);
+            // Extract data robustly (handle both wrapped and unwrapped API responses)
+            const resultData = response.data || response;
+
+            if (resultData?.id) {
+                // Save phone to sessionStorage for seamless detail viewing
+                if (typeof window !== 'undefined') {
+                    sessionStorage.setItem('tracking_phone', phone);
+                }
+                router.push(`/track/${resultData.id}`);
             }
         } catch (error: any) {
             console.error('Search error:', error);
-            const message = error.response?.data?.message || 'Không tìm thấy thông tin chuyến tàu';
+            const message = error.message || 'Không tìm thấy thông tin chuyến tàu';
             toast.error(message);
         } finally {
             setIsLoading(false);
@@ -44,15 +51,20 @@ export default function PublicSearchPage() {
         <div className="flex flex-col items-center justify-center p-6 md:p-12 min-h-full relative">
             <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10 animate-in fade-in zoom-in duration-500">
                 <div className="text-center mb-10">
-                    <div className="inline-flex p-4 bg-brand-soft rounded-2xl mb-6 shadow-sm shadow-brand/5">
-                        <Search className="text-brand w-8 h-8" strokeWidth={2.5} />
+                    <div className="flex justify-center mb-6">
+                        <div className="w-20 h-20 bg-white rounded-2xl shadow-lg shadow-slate-100/50 border border-slate-100 flex items-center justify-center overflow-hidden p-2.5">
+                            <img src="/logo_new.png" alt="Logo" className="w-full h-full object-contain" />
+                        </div>
+                    </div>
+                    <div className="inline-flex p-3 bg-brand-soft rounded-xl mb-4 shadow-sm shadow-brand/5">
+                        <Search className="text-brand w-6 h-6" strokeWidth={2.5} />
                     </div>
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight font-heading uppercase">
                         TRA CỨU HÀNH TRÌNH TÀU
                     </h2>
-                    <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-2 px-4 opacity-60">
+                    {/* <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-2 px-4 opacity-60">
                         Theo dõi tiến độ tàu làm hàng trực tuyến
-                    </p>
+                    </p> */}
                 </div>
 
                 <form onSubmit={handleSearch} className="space-y-6">
@@ -116,11 +128,11 @@ export default function PublicSearchPage() {
                     </Link>
                 </form>
 
-                <div className="mt-10 p-4 bg-amber-50 rounded-2xl border border-amber-100/50">
+                {/* <div className="mt-10 p-4 bg-amber-50 rounded-2xl border border-amber-100/50">
                     <p className="text-[10px] text-amber-700 leading-relaxed font-bold uppercase tracking-widest text-center">
                         QUÝ KHÁCH CÓ THỂ QUÉT MÃ QR TRÊN LỆNH ĐỂ TRA CỨU NHANH HƠN
                     </p>
-                </div>
+                </div> */}
             </div>
         </div>
     );

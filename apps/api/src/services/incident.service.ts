@@ -196,8 +196,15 @@ export class IncidentService {
     /**
      * Delete an incident record.
      */
-    static async delete(id: string) {
+    static async delete(id: string, user?: { id: string; role: string }) {
         const incident = await prisma.incident.findUnique({ where: { id }, include: { children: true } });
+        if (!incident) throw new Error('Incident not found');
+
+        // RBAC CHECK: MANAGER can delete any. STAFF only if owner.
+        if (user && user.role !== 'MANAGER' && incident.userId !== user.id) {
+            throw new Error('Bạn không có quyền xóa sự cố của người khác');
+        }
+
         let affectedVoyageIds: string[] = [];
         if (incident?.voyageId) affectedVoyageIds.push(incident.voyageId);
         if (incident?.children?.length) {

@@ -49,7 +49,7 @@ export default function MyQrContent() {
                     id: user.id,
                     code: user.employeeCode,
                     name: user.fullName,
-                    type: 'EMPLOYEE',
+                    type: 'STAFF',
                     ts: qrTimestamp
                 });
 

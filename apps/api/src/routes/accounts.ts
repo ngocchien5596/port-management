@@ -10,7 +10,7 @@ import prisma from '../lib/prisma.js';
 const router: Router = Router();
 
 // GET /api/accounts/template - Download Excel Template
-router.get('/template', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (req, res, next) => {
+router.get('/template', authenticate, authorize('MANAGER'), async (req, res, next) => {
     try {
         const workbook = new ExcelJS.Workbook();
 
@@ -18,7 +18,7 @@ router.get('/template', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (re
         const sheet = workbook.addWorksheet('Import Template');
 
         // Fill Roles (Col C) - defined in enum or static list
-        const roles = ['EMPLOYEE', 'ADMIN_SYSTEM', 'ADMIN_KITCHEN', 'HR'];
+        const roles = ['MANAGER', 'STAFF'];
         const roleCount = roles.length;
 
         // Headers
@@ -26,7 +26,7 @@ router.get('/template', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (re
             { header: 'Mã nhân viên (*)', key: 'code', width: 15 },
             { header: 'Họ và tên (*)', key: 'name', width: 25 },
             { header: 'Email', key: 'email', width: 25 },
-            { header: 'Vai trò (ADMIN/EMPLOYEE)', key: 'role', width: 25 },
+            { header: 'Vai trò (MANAGER/STAFF)', key: 'role', width: 25 },
         ];
 
         // Style Header
@@ -40,7 +40,7 @@ router.get('/template', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (re
             sheet.getCell(`${roleColLetter}${i}`).dataValidation = {
                 type: 'list',
                 allowBlank: true,
-                formulae: ['"EMPLOYEE,ADMIN_SYSTEM,ADMIN_KITCHEN,HR"']
+                formulae: ['"MANAGER,STAFF"']
             };
         }
 
@@ -58,7 +58,7 @@ router.get('/template', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (re
 });
 
 // POST /api/accounts/import - Import from Excel
-router.post('/import', authenticate, authorize('ADMIN_SYSTEM', 'HR'), upload.single('file'), async (req: any, res: any, next: any) => {
+router.post('/import', authenticate, authorize('MANAGER'), upload.single('file'), async (req: any, res: any, next: any) => {
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, error: { message: 'Vui lòng tải lên file Excel' } });
@@ -87,10 +87,27 @@ router.post('/import', authenticate, authorize('ADMIN_SYSTEM', 'HR'), upload.sin
         worksheet.eachRow((row, rowNumber) => {
             if (rowNumber === 1) return; // Skip header
 
-            const employeeCode = row.getCell(1).text?.toString().trim();
-            const fullName = row.getCell(2).text?.toString().trim();
-            const email = row.getCell(3).text?.toString().trim();
-            const roleStr = row.getCell(4).text?.toString().trim().toUpperCase();
+            const getCellValue = (cell: any) => {
+                // Prioritize .text to preserve formatted strings like leading zeros (e.g. 000000)
+                if (cell.text && cell.text !== '') return String(cell.text).trim();
+                
+                const val = cell.value;
+                if (val === null || val === undefined) return '';
+                if (typeof val === 'object' && val.result !== undefined) return String(val.result).trim();
+                return String(val).trim();
+            };
+
+            let employeeCode = getCellValue(row.getCell(1));
+            
+            // Auto-pad numeric employee codes to 6 digits (e.g., 0 -> 000000, 123 -> 000123)
+            // This handles Excel's behavior of stripping leading zeros from numeric cells.
+            if (/^\d+$/.test(employeeCode) && employeeCode.length < 6) {
+                employeeCode = employeeCode.padStart(6, '0');
+            }
+
+            const fullName = getCellValue(row.getCell(2));
+            const email = getCellValue(row.getCell(3));
+            const roleStr = getCellValue(row.getCell(4)).toUpperCase();
 
             // Check if row is completely empty
             const isEmpty = !employeeCode && !fullName && !email;
@@ -147,11 +164,13 @@ router.post('/import', authenticate, authorize('ADMIN_SYSTEM', 'HR'), upload.sin
                     const rawRole = row.roleStr?.trim().toUpperCase() || '';
                     console.log(`[Import] Row ${row.rowNumber}: Raw role string: "${rawRole}"`);
 
-                    let role: Role = Role.EMPLOYEE;
+                    let role: Role = Role.STAFF;
                     if (Object.values(Role).includes(rawRole as any)) {
                         role = rawRole as Role;
-                    } else if (rawRole === 'ADMIN') {
-                        role = Role.ADMIN_SYSTEM;
+                    } else if (['ADMIN', 'QUANLY', 'QUẢN LÝ'].includes(rawRole)) {
+                        role = Role.MANAGER;
+                    } else if (['EMPLOYEE', 'NHANVIEN', 'NHÂN VIÊN'].includes(rawRole)) {
+                        role = Role.STAFF;
                     }
 
                     console.log(`[Import] Row ${row.rowNumber}: Resolved Role: "${role}"`);
@@ -219,11 +238,11 @@ const createAccountSchema = z.object({
     fullName: z.string().min(1, 'Họ tên là bắt buộc'),
     email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
     password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự').optional(),
-    role: z.nativeEnum(Role).optional().default(Role.EMPLOYEE),
+    role: z.nativeEnum(Role).optional().default(Role.STAFF),
 });
 
 // GET /api/accounts - List all accounts
-router.get('/', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (req, res, next) => {
+router.get('/', authenticate, authorize('MANAGER'), async (req, res, next) => {
     try {
         const employees = await prisma.employee.findMany({
             include: {
@@ -253,7 +272,7 @@ router.get('/', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (req, res, 
 });
 
 // GET /api/accounts/:id - Get single account detail
-router.get('/:id', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (req, res, next) => {
+router.get('/:id', authenticate, authorize('MANAGER'), async (req, res, next) => {
     try {
         const { id } = req.params;
         const employee = await prisma.employee.findUnique({
@@ -291,7 +310,7 @@ router.get('/:id', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (req, re
 });
 
 // POST /api/accounts - Create new account
-router.post('/', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (req: AuthRequest, res, next) => {
+router.post('/', authenticate, authorize('MANAGER'), async (req: AuthRequest, res, next) => {
     try {
         const validation = createAccountSchema.safeParse(req.body);
         if (!validation.success) {
@@ -358,7 +377,7 @@ const updateAccountSchema = createAccountSchema.partial().extend({
     isActive: z.boolean().optional(),
 });
 
-router.put('/:id', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (req, res, next) => {
+router.put('/:id', authenticate, authorize('MANAGER'), async (req, res, next) => {
     try {
         const { id } = req.params;
         const validation = updateAccountSchema.safeParse(req.body);
@@ -431,7 +450,7 @@ router.put('/:id', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (req, re
                     data: {
                         employeeId: id,
                         passwordHash: accountUpdateData.passwordHash || await bcrypt.hash('123456', 10),
-                        role: accountUpdateData.role || Role.EMPLOYEE,
+                        role: accountUpdateData.role || Role.STAFF,
                         secretCode: Math.floor(100000 + Math.random() * 900000).toString(),
                         isActive: accountUpdateData.isActive ?? true,
                     }
@@ -453,7 +472,7 @@ router.put('/:id', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (req, re
 });
 
 // DELETE /api/accounts/:id - Delete account
-router.delete('/:id', authenticate, authorize('ADMIN_SYSTEM', 'HR'), async (req, res, next) => {
+router.delete('/:id', authenticate, authorize('MANAGER'), async (req, res, next) => {
     try {
         const { id } = req.params;
 

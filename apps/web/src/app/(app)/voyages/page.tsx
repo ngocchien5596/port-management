@@ -8,9 +8,12 @@ import { useVoyages, useDeleteVoyage } from '@/features/qltau/hooks';
 import { formatDateTime, formatDate } from '@/lib/utils/date';
 import { DatePicker } from '@/components/ui';
 import { Voyage } from '@/features/qltau/types';
-import { Plus, Search, Edit2, Trash2, Ship, Anchor, MapPin, Activity, ChevronDown, Filter, ShieldCheck, CalendarDays } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Ship, Anchor, MapPin, Activity, ChevronDown, Filter, ShieldCheck, CalendarDays, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils/cn';
+
+
+import { VOYAGE_STATUS_CONFIG, getStatusConfig } from '@/constants/voyage';
 
 
 import CreateVoyageModal from './CreateVoyageModal';
@@ -71,35 +74,18 @@ export default function VoyagesPage() {
     }) || [];
 
     const getStatusBadge = (status: string, voyage: Voyage) => {
-        const styles: Record<string, string> = {
-            'NHAP': 'bg-slate-50 text-slate-700 border-slate-200',
-            'THU_TUC': 'bg-brand-soft text-brand border-brand/20',
-            'DO_MON_DAU_VAO': 'bg-brand-soft text-brand border-brand/20',
-            'LAY_MAU': 'bg-purple-50 text-purple-700 border-purple-200',
-            'LAM_HANG': 'bg-amber-50 text-amber-700 border-amber-200',
-            'DO_MON_DAU_RA': 'bg-orange-50 text-orange-700 border-orange-200',
-            'HOAN_THANH': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-            'TAM_DUNG': 'bg-slate-50 text-slate-700 border-slate-200',
-            'HUY_BO': 'bg-red-50 text-red-700 border-red-200',
-        };
-        const labels: Record<string, string> = {
-            'NHAP': 'Bản nháp',
-            'THU_TUC': 'Làm thủ tục',
-            'DO_MON_DAU_VAO': 'Đo mớn đầu vào',
-            'LAY_MAU': 'Lấy mẫu',
-            'LAM_HANG': 'Làm hàng',
-            'DO_MON_DAU_RA': 'Đo mớn đầu ra',
-            'HOAN_THANH': 'Hoàn thành',
-            'TAM_DUNG': 'Tạm dừng',
-            'HUY_BO': 'Hủy bỏ',
-        };
+        const config = getStatusConfig(status);
+        const badgeClasses = cn(
+            "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase tracking-wider transition-all shadow-sm",
+            config.bg,
+            config.color,
+            config.border
+        );
+
         if (status === 'HOAN_THANH') {
             return (
-                <div
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase tracking-wider ${styles[status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}
-                    title="Chuyến tàu đã hoàn thành"
-                >
-                    {labels[status] || status}
+                <div className={badgeClasses} title="Chuyến tàu đã hoàn thành">
+                    {config.label}
                 </div>
             );
         }
@@ -107,10 +93,10 @@ export default function VoyagesPage() {
         return (
             <button
                 onClick={() => setStatusModalVoyage(voyage)}
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase tracking-wider transition-all hover:opacity-80 active:scale-95 shadow-sm ${styles[status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                className={cn(badgeClasses, "hover:opacity-80 active:scale-95")}
                 title="Cập nhật trạng thái"
             >
-                {labels[status] || status}
+                {config.label}
             </button>
         );
     };
@@ -161,15 +147,9 @@ export default function VoyagesPage() {
                                 className="w-full h-10 pl-9 pr-8 bg-white border border-vtborder rounded-xl text-sm font-bold text-vttext-secondary focus:outline-none focus:ring-2 focus:ring-focus focus:border-brand appearance-none cursor-pointer transition-all"
                             >
                                 <option value="all">Tất cả trạng thái</option>
-                                <option value="NHAP">Bản nháp</option>
-                                <option value="THU_TUC">Làm thủ tục</option>
-                                <option value="DO_MON_DAU_VAO">Đo mớn đầu vào</option>
-                                <option value="LAY_MAU">Lấy mẫu</option>
-                                <option value="LAM_HANG">Làm hàng</option>
-                                <option value="DO_MON_DAU_RA">Đo mớn đầu ra</option>
-                                <option value="HOAN_THANH">Hoàn thành</option>
-                                <option value="TAM_DUNG">Tạm dừng</option>
-                                <option value="HUY_BO">Hủy bỏ</option>
+                                {Object.entries(VOYAGE_STATUS_CONFIG).map(([value, config]) => (
+                                    <option key={value} value={value}>{config.label}</option>
+                                ))}
                             </select>
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-vttext-muted pointer-events-none" />
                         </div>
@@ -230,9 +210,27 @@ export default function VoyagesPage() {
                                 </tr>
                             ) : (
                                 filteredVoyages.map((voyage: Voyage, idx: number) => (
-                                    <tr key={voyage.id} className="hover:bg-brand-soft/30 transition-colors group">
-                                        <td className="py-5 px-6">
-                                            <span className="text-sm font-bold text-slate-900">{voyage.voyageCode}</span>
+                                    <tr key={voyage.id} className={cn(
+                                        "transition-colors group relative",
+                                        voyage.priority === 'EMERGENCY'
+                                            ? "bg-rose-50/50 hover:bg-rose-100/60"
+                                            : "hover:bg-brand-soft/30"
+                                    )}>
+                                        <td className="py-5 px-6 relative">
+                                            {voyage.priority === 'EMERGENCY' && (
+                                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500 rounded-r-md" />
+                                            )}
+                                            <div className="flex items-center gap-2.5">
+                                                <span className={cn(
+                                                    "text-sm font-bold",
+                                                    voyage.priority === 'EMERGENCY' ? "text-rose-700 font-black" : "text-slate-900"
+                                                )}>{voyage.voyageCode}</span>
+                                                {voyage.priority === 'EMERGENCY' && (
+                                                    <div className="w-6 h-6 rounded-full bg-rose-100 flex items-center justify-center shrink-0" title="Chuyến tàu Khẩn Cấp">
+                                                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="py-5 px-6">
                                             <div className="flex flex-col">
@@ -257,7 +255,7 @@ export default function VoyagesPage() {
                                                     </span>
                                                 </div>
                                             ) : (
-                                                    <span className="text-sm font-medium text-slate-400 italic">Chưa đặt</span>
+                                                <span className="text-sm font-medium text-slate-400 italic">Chưa đặt</span>
                                             )}
                                         </td>
                                         <td className="py-5 px-6 text-right">

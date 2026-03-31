@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { IncidentService } from '../services/incident.service';
+import { AuthRequest } from '../middleware/auth';
 
 export class IncidentController {
     static async getAll(req: Request, res: Response) {
@@ -23,9 +24,12 @@ export class IncidentController {
         }
     }
 
-    static async create(req: Request, res: Response) {
+    static async create(req: AuthRequest, res: Response) {
         try {
-            const incident = await IncidentService.create(req.body);
+            const incident = await IncidentService.create({
+                ...req.body,
+                userId: req.user?.id
+            });
             res.status(201).json(incident);
         } catch (error: any) {
             res.status(400).json({ message: error.message });
@@ -42,9 +46,9 @@ export class IncidentController {
         }
     }
 
-    static async delete(req: Request, res: Response) {
+    static async delete(req: AuthRequest, res: Response) {
         try {
-            await IncidentService.delete(req.params.id);
+            await IncidentService.delete(req.params.id, req.user);
             res.status(204).send();
         } catch (error: any) {
             res.status(400).json({ message: error.message });

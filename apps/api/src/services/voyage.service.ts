@@ -239,8 +239,9 @@ export class VoyageService {
                     data: {
                         voyageId: voyage.id,
                         type: 'STATUS_CHANGE',
-                        title: 'NHAP',
+                        title: 'Khởi tạo',
                         description: 'Khởi tạo chuyến tàu',
+                        metadata: { status: 'NHAP' },
                         userId: userId
                     }
                 });
@@ -384,8 +385,26 @@ export class VoyageService {
                     }
                 });
             }
+            // 2. Đẩy lùi QueueNo của Tàu A và các tàu đang xếp hàng phía trước Tàu B
+            if (currentVoyage.laneId && currentVoyage.queueNo !== null && emergencyVoyage.queueNo !== null && emergencyVoyage.queueNo > currentVoyage.queueNo) {
+                await tx.voyage.updateMany({
+                    where: {
+                        laneId: currentVoyage.laneId,
+                        queueNo: {
+                            gte: currentVoyage.queueNo,
+                            lt: emergencyVoyage.queueNo
+                        },
+                        status: { notIn: ['HOAN_THANH', 'HUY_BO'] },
+                        id: { not: emergencyVoyageId }
+                    },
+                    data: {
+                        queueNo: { increment: 1 }
+                    }
+                });
+            }
 
-            // 2. Cập nhật Tàu A: Tạm dừng, rút cẩu
+            // 3. Cập nhật Tàu A: Tạm dừng, rút cẩu
+            // (Tàu A đã được +1 queueNo ở lệnh updateMany trên nếu thỏa mãn điều kiện)
             const updatedCurrentVoyage = await tx.voyage.update({
                 where: { id: currentVoyageId },
                 data: {
@@ -394,12 +413,13 @@ export class VoyageService {
                 }
             });
 
-            // 3. Cập nhật Tàu B: Làm hàng, nhận cẩu
+            // 4. Cập nhật Tàu B: Làm hàng, nhận cẩu, chiếm QueueNo ưu tiên cao nhất của Tàu A
             const updatedEmergencyVoyage = await tx.voyage.update({
                 where: { id: emergencyVoyageId },
                 data: {
                     status: 'LAM_HANG',
-                    equipmentId: equipmentId
+                    equipmentId: equipmentId,
+                    queueNo: currentVoyage.queueNo
                 }
             });
 
@@ -571,14 +591,15 @@ export class VoyageService {
 
         // Create VoyageEvent
         const statusMap: Record<string, string> = {
+            'NHAP': 'Nháp',
             'THU_TUC': 'Làm thủ tục',
             'DO_MON_DAU_VAO': 'Đo mớn đầu vào',
             'LAY_MAU': 'Lấy mẫu',
             'LAM_HANG': 'Làm hàng',
             'DO_MON_DAU_RA': 'Đo mớn đầu ra',
-            'HOAN_THANH': 'Hoàn thành chuyến tàu',
-            'TAM_DUNG': 'Tạm dừng chuyến tàu',
-            'HUY_BO': 'Hủy bỏ chuyến tàu'
+            'HOAN_THANH': 'Hoàn thành',
+            'TAM_DUNG': 'Tạm dừng',
+            'HUY_BO': 'Hủy bỏ'
         };
         const statusLabel = statusMap[status] || status;
         let eventDescription = `Chuyển trạng thái sang: ${statusLabel}`;
@@ -774,10 +795,16 @@ export class VoyageService {
         });
         if (!voyage) throw new Error('Voyage not found');
 
-        // 1. Recalculate all cumulative values sequentially
-        const allProgress = await prisma.voyageProgress.findMany({
-            where: { voyageId },
-            orderBy: { createdAt: 'asc' }
+        // 1. Recalculate all cumulative values sequentially based on operational timeline
+        const allLogs = await prisma.voyageProgress.findMany({
+            where: { voyageId }
+        });
+
+        // Sort by actual operational end time (prioritize endTime over createdAt)
+        const allProgress = allLogs.sort((a: any, b: any) => {
+            const timeA = new Date(a.endTime || a.createdAt).getTime();
+            const timeB = new Date(b.endTime || b.createdAt).getTime();
+            return timeA - timeB;
         });
 
         let currentCumulative = 0;
@@ -1031,7 +1058,11 @@ export class VoyageService {
                 label: chartStartTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
             },
             ...progressLogs.map((p: any) => {
-                const logTimeStr = p.endTime || p.createdAt;
+                // Support both Date objects (from DB) and strings
+                const logTimeStr = p.endTime 
+                    ? (typeof p.endTime === 'string' ? p.endTime : p.endTime.toISOString())
+                    : (typeof p.createdAt === 'string' ? p.createdAt : p.createdAt.toISOString());
+                
                 const logTime = new Date(logTimeStr);
 
                 // Calculate hours for this specific record
@@ -1113,12 +1144,15 @@ export class VoyageService {
         });
     }
 
-    static async getPublicTracking(voyageCode: number, phone: string) {
+    static async getPublicTracking(params: { voyageId?: string, voyageCode?: number, phone: string }) {
+        const { voyageId, voyageCode, phone } = params;
+        const normalizedPhone = phone.trim();
+
         const voyage = await prisma.voyage.findFirst({
             where: {
-                voyageCode: voyageCode,
+                ...(voyageId ? { id: voyageId } : { voyageCode }),
                 vessel: {
-                    customerPhone: phone
+                    customerPhone: normalizedPhone
                 }
             },
             include: {
@@ -1132,6 +1166,18 @@ export class VoyageService {
                 }
             }
         });
+
+        // Debug logging for troubleshooting data mismatches
+        if (!voyage && (voyageId || voyageCode)) {
+            const existsByCode = await prisma.voyage.findFirst({
+                where: voyageId ? { id: voyageId } : { voyageCode },
+                include: { vessel: true }
+            });
+            
+            if (existsByCode) {
+                console.log(`[PublicTracking] Voyage found by code ${voyageCode || voyageId}, but phone mismatch. Provided: "${normalizedPhone}", Expected: "${existsByCode.vessel.customerPhone}"`);
+            }
+        }
 
         if (!voyage) return null;
 

@@ -78,7 +78,7 @@ export default function AccountManagementContent() {
     const { data: accounts, isLoading: isLoadingAccounts } = useAccounts();
     const deleteAccount = useDeleteAccount();
     const { user } = useAuthStore();
-    const canManage = user?.role === 'HR' || user?.role === 'ADMIN_SYSTEM';
+    const canManage = user?.role === 'MANAGER';
     const router = useRouter();
 
     useEffect(() => {
@@ -274,21 +274,13 @@ export default function AccountManagementContent() {
                                                 {account.fullName}
                                             </td>
                                             <td className="py-4 px-6">
-                                                {account.role === 'ADMIN_SYSTEM' ? (
+                                                {account.role === 'MANAGER' ? (
                                                     <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-wider">
-                                                        System Admin
-                                                    </span>
-                                                ) : account.role === 'ADMIN_KITCHEN' ? (
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black bg-amber-50 text-amber-600 border border-amber-100 uppercase tracking-wider">
-                                                        Kitchen Admin
-                                                    </span>
-                                                ) : account.role === 'HR' ? (
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wider">
-                                                        HR Manager
+                                                        Quản lý
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">
-                                                        Employee
+                                                        Nhân viên
                                                     </span>
                                                 )}
                                             </td>

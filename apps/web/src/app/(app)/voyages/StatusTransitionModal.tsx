@@ -12,27 +12,17 @@ interface StatusTransitionModalProps {
     voyage: Voyage | null;
 }
 
-const STATUS_SEQUENCE = [
-    { value: 'NHAP', label: 'Nháp' },
-    { value: 'THU_TUC', label: 'Làm thủ tục' },
-    { value: 'DO_MON_DAU_VAO', label: 'Đo mớn đầu vào' },
-    { value: 'LAY_MAU', label: 'Lấy mẫu' },
-    { value: 'LAM_HANG', label: 'Làm hàng' },
-    { value: 'DO_MON_DAU_RA', label: 'Đo mớn đầu ra' },
-    { value: 'HOAN_THANH', label: 'Hoàn thành' },
-];
+import { VOYAGE_STATUS_CONFIG, getStatusConfig } from '@/constants/voyage';
 
-const STATUS_LABELS: Record<string, string> = {
-    'NHAP': 'Nháp',
-    'THU_TUC': 'Làm thủ tục',
-    'DO_MON_DAU_VAO': 'Đo mớn đầu vào',
-    'LAY_MAU': 'Lấy mẫu',
-    'LAM_HANG': 'Làm hàng',
-    'DO_MON_DAU_RA': 'Đo mớn đầu ra',
-    'TAM_DUNG': 'Tạm dừng',
-    'HOAN_THANH': 'Hoàn thành',
-    'HUY_BO': 'Hủy bỏ',
-};
+const STATUS_SEQUENCE = [
+    { value: 'NHAP', label: VOYAGE_STATUS_CONFIG.NHAP.label },
+    { value: 'THU_TUC', label: VOYAGE_STATUS_CONFIG.THU_TUC.label },
+    { value: 'DO_MON_DAU_VAO', label: VOYAGE_STATUS_CONFIG.DO_MON_DAU_VAO.label },
+    { value: 'LAY_MAU', label: VOYAGE_STATUS_CONFIG.LAY_MAU.label },
+    { value: 'LAM_HANG', label: VOYAGE_STATUS_CONFIG.LAM_HANG.label },
+    { value: 'DO_MON_DAU_RA', label: VOYAGE_STATUS_CONFIG.DO_MON_DAU_RA.label },
+    { value: 'HOAN_THANH', label: VOYAGE_STATUS_CONFIG.HOAN_THANH.label },
+];
 
 export default function StatusTransitionModal({ isOpen, onClose, voyage }: StatusTransitionModalProps) {
     const [selectedStatus, setSelectedStatus] = useState<string>('');
@@ -130,14 +120,14 @@ export default function StatusTransitionModal({ isOpen, onClose, voyage }: Statu
                         <div>
                             <div className="text-xs font-semibold text-slate-500 uppercase">Trạng thái hiện tại</div>
                             <div className="font-bold text-slate-700 mt-1">
-                                {STATUS_LABELS[voyage.status] || voyage.status}
+                                {getStatusConfig(voyage.status).label}
                             </div>
                         </div>
                         <ArrowRight className="text-slate-300" />
                         <div className="text-right">
                             <div className="text-xs font-semibold text-slate-500 uppercase">Tùy chọn kế tiếp</div>
                             <div className="font-bold text-brand mt-1">
-                                {selectedStatus === 'TAM_DUNG' ? 'Tạm dừng' : selectedStatus === 'HUY_BO' ? 'Hủy bỏ' : (STATUS_LABELS[selectedStatus] || selectedStatus)}
+                                {selectedStatus === 'TAM_DUNG' ? 'Tạm dừng' : selectedStatus === 'HUY_BO' ? 'Hủy bỏ' : getStatusConfig(selectedStatus).label}
                             </div>
                         </div>
                     </div>
@@ -178,7 +168,7 @@ export default function StatusTransitionModal({ isOpen, onClose, voyage }: Statu
 
                                     return (
                                         <option key={s.value} value={s.value} disabled={isDisabled}>
-                                            {STATUS_LABELS[s.value] || s.value}{labelSuffix}
+                                            {getStatusConfig(s.value).label}{labelSuffix}
                                         </option>
                                     );
                                 })}
