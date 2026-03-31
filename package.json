@@ -2,7 +2,7 @@
     "name": "port-management-workspace",
     "version": "1.0.0",
     "private": true,
-    "packageManager": "pnpm@8.15.9",
+    "packageManager": "pnpm@9.15.4",
     "scripts": {
         "dev": "pnpm -r --parallel dev",
         "build": "pnpm -r build",
