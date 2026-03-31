@@ -28,16 +28,24 @@ import { testTimeController } from './controllers/test-time.controller';
 app.get('/api/test-time', testTimeController);
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: false,
+}));
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (mobile apps, curl, etc.)
         if (!origin) return callback(null, true);
+
+        // Normalize origin and frontendUrl by removing trailing slashes
+        const normalizedOrigin = origin.replace(/\/$/, '');
+        const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
+
         // Allow any localhost port in development
-        if (origin.match(/^http:\/\/localhost:\d+$/)) return callback(null, true);
+        if (normalizedOrigin.match(/^http:\/\/localhost:\d+$/)) return callback(null, true);
+
         // Allow configured frontend URL
-        const frontendUrl = process.env.FRONTEND_URL;
-        if (frontendUrl && origin === frontendUrl) return callback(null, true);
+        if (frontendUrl && normalizedOrigin === frontendUrl) return callback(null, true);
+
         callback(null, false);
     },
     credentials: true,
