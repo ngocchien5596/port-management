@@ -7,6 +7,7 @@
         "dev": "pnpm -r --parallel dev",
         "build": "pnpm -r build",
         "lint": "pnpm -r lint",
+        "build:web": "pnpm --filter=@port/web build",
         "test": "pnpm -r test",
         "clean": "pnpm -r clean"
     },
