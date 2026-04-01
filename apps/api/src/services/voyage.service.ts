@@ -408,8 +408,7 @@ export class VoyageService {
             const updatedCurrentVoyage = await tx.voyage.update({
                 where: { id: currentVoyageId },
                 data: {
-                    status: 'TAM_DUNG',
-                    equipmentId: null
+                    status: 'TAM_DUNG'
                 }
             });
 
@@ -417,8 +416,8 @@ export class VoyageService {
             const updatedEmergencyVoyage = await tx.voyage.update({
                 where: { id: emergencyVoyageId },
                 data: {
-                    status: 'LAM_HANG',
                     equipmentId: equipmentId,
+                    laneId: currentVoyage.laneId, 
                     queueNo: currentVoyage.queueNo
                 }
             });
@@ -451,31 +450,47 @@ export class VoyageService {
             return { updatedCurrentVoyage, updatedEmergencyVoyage, currentVoyage };
         });
 
-        // Emit Socket.IO events
-        emitEvent('VOYAGE_UPDATED', result.updatedCurrentVoyage);
-        emitEvent('VOYAGE_UPDATED', result.updatedEmergencyVoyage);
+        // 6. Recalculate and Emit Full Data for both voyages
+        // This ensures cumulative values are correct and ETDs are updated
+        const { voyage: finalCurrentVoyage } = await this.recalculateProgressAndEtd(currentVoyageId);
+        const { voyage: finalEmergencyVoyage } = await this.recalculateProgressAndEtd(emergencyVoyageId);
 
         // Kịch bản 4: Push notification real-time (outside tx so Socket.IO emits)
         await NotificationService.createNotification({
             type: 'EMERGENCY_OVERRIDE',
-            title: 'Cảnh báo Khẩn cấp: Bị tước cẩu',
-            message: `Bị tước cẩu chuyển sang TẠM DỪNG. Vui lòng cấp cẩu mới!`,
+            title: 'Thông báo: Tạm dừng nhường cẩu',
+            message: `Tàu đã tạm dừng để nhường quyền ưu tiên cho tàu Khẩn cấp. Cẩu hiện đang bận.`,
             severity: 'CRITICAL',
             voyageId: currentVoyageId
         });
 
-        return result.updatedEmergencyVoyage;
+        return finalEmergencyVoyage;
     }
 
-    static async updateStatus(id: string, status: any, reason?: string, userId?: string) {
+    static async updateStatus(id: string, status: any, reason?: string, userId?: string, force: boolean = false) {
         const currentVoyage = await prisma.voyage.findUnique({
             where: { id },
-            include: { product: true, vessel: true }
+            include: { 
+                product: true, 
+                vessel: true,
+                progress: true 
+            }
         });
 
         if (!currentVoyage) throw new Error('Không tìm thấy chuyến tàu');
 
         let extraData: any = {};
+
+        // INCOMPLETE PRODUCTION WARNING
+        if (currentVoyage.status === 'LAM_HANG' && ['DO_MON_DAU_RA', 'HOAN_THANH', 'XONG'].includes(status) && !force) {
+            const targetVolume = Number(currentVoyage.totalVolume || 0);
+            if (targetVolume > 0) {
+                const currentProduction = (currentVoyage as any).progress.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+                if (currentProduction < targetVolume) {
+                    throw new Error(`[PROMPT_CONFIRM] Sản lượng hiện tại (${currentProduction.toLocaleString()} Tấn) thấp hơn sản lượng mục tiêu (${targetVolume.toLocaleString()} Tấn). Bạn có chắc chắn muốn kết thúc làm hàng không?`);
+                }
+            }
+        }
 
         // Readiness Check for HANDLING
         if (status === 'LAM_HANG') {
@@ -519,10 +534,15 @@ export class VoyageService {
 
                 if (overlappingVoyages.length > 0) {
                     const occupying = overlappingVoyages[0];
+                    const isOccupyingEmergency = (occupying as any).priority === 'EMERGENCY';
+                    
                     if (currentVoyage.priority === 'EMERGENCY') {
-                        throw new Error(`Đã có chuyến tàu ${occupying.voyageCode} [${occupying.vessel.code}] đang làm hàng tại bến này. Vui lòng sử dụng tính năng Nhường Cẩu Khẩn Cấp để lấy bến.`);
+                        throw new Error(`Đã có chuyến tàu ${occupying.voyageCode} [${occupying.vessel?.code || 'N/A'}] đang làm hàng tại bến này. Vui lòng sử dụng tính năng Nhường Cẩu Khẩn Cấp để lấy bến.`);
                     } else {
-                        throw new Error(`Đã có chuyến tàu ${occupying.voyageCode} [${occupying.vessel.code}] đang làm hàng tại bến này. Vui lòng cho Tạm Dừng tàu đó trước.`);
+                        throw new Error(
+                            `Đã có chuyến tàu ${occupying.voyageCode} [${occupying.vessel?.code || 'N/A'}] ${isOccupyingEmergency ? '(TÀU KHẨN CẤP)' : ''} đang làm hàng tại bến này. ` +
+                            `Vui lòng chờ tàu này hoàn thành hoặc tạm dừng tàu đó trước khi quay lại làm hàng.`
+                        );
                     }
                 }
             }
@@ -1116,14 +1136,20 @@ export class VoyageService {
 
 
 
-    static async reorderQueue(updates: { id: string, queueNo: number }[]) {
+    static async reorderQueue(updates: { id: string, queueNo: number, laneId?: string, equipmentId?: string | null }[]) {
         return prisma.$transaction(async (tx) => {
             const results = [];
             for (const item of updates) {
+                const data: any = { queueNo: item.queueNo };
+                if (item.laneId) data.laneId = item.laneId;
+                if (item.equipmentId !== undefined) {
+                    data.equipmentId = item.equipmentId;
+                }
+
                 results.push(
                     tx.voyage.update({
                         where: { id: item.id },
-                        data: { queueNo: item.queueNo }
+                        data
                     })
                 );
             }

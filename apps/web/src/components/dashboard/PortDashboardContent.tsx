@@ -11,9 +11,47 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { cn } from '@/lib/utils/cn';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { 
+    Ship, 
+    Activity, 
+    Zap, 
+    TrendingUp, 
+    BarChart3, 
+    AlertCircle, 
+    CheckCircle2,
+    ArrowUpRight,
+    Search
+} from 'lucide-react';
 import EmergencyOverrideModal from './EmergencyOverrideModal';
 
 import { Icon, PATHS, mapStatus, getStatusStyles, getStatusLabel } from './dashboard-utils';
+
+// --- SHARED COMPONENTS ---
+
+const KPICard = ({ title, value, unit, icon: Icon, color, children, className }: any) => (
+    <Card className={cn("border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all duration-300 cursor-pointer", className)}>
+        <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{title}</p>
+                    <div className="flex items-baseline gap-1">
+                        <h3 className="text-2xl font-black text-slate-900 tracking-tight">{value}</h3>
+                        {unit && <span className="text-xs font-bold text-slate-400">{unit}</span>}
+                    </div>
+                </div>
+                <div className={`p-3 rounded-2xl ${color} bg-opacity-10 group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className={`w-5 h-5 ${color.replace('bg-', 'text-')}`} />
+                </div>
+            </div>
+            {children && (
+                <div className="mt-4 pt-4 border-t border-slate-50">
+                    {children}
+                </div>
+            )}
+        </CardContent>
+    </Card>
+);
 
 // --- COMPONENT PORTDASHBOARD ---
 
@@ -46,41 +84,121 @@ export default function PortDashboardContent() {
 
     const handleDragEnd = (result: DropResult) => {
         if (!result.destination) return;
-        const sourceIndex = result.source.index;
-        const destinationIndex = result.destination.index;
-        const laneId = result.source.droppableId;
+        const { source, destination, draggableId } = result;
 
-        if (sourceIndex === destinationIndex && result.destination.droppableId === laneId) return;
+        // 1. Same place
+        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-        // Find voyages in this lane's queue
-        const laneQueue = localVoyages
-            .filter(v => v.laneId === laneId && !['HOAN_THANH', 'HUY_BO', 'LAM_HANG'].includes(v.status))
+        const sourceLaneId = source.droppableId;
+        const destLaneId = destination.droppableId;
+        const isCrossLane = sourceLaneId !== destLaneId;
+
+        // 2. Find the moved voyage
+        const movedVoyage = localVoyages.find(v => v.id === draggableId);
+        if (!movedVoyage) {
+            console.error('[DragEnd] Voyage not found:', draggableId);
+            return;
+        }
+
+        // 3. Validation: Only Queue voyages can move
+        const activeServingStatuses = ['LAM_HANG', 'DO_MON_DAU_VAO'];
+        const restrictedStatuses = [...activeServingStatuses, 'HOAN_THANH', 'HUY_BO'];
+
+        if (restrictedStatuses.includes(movedVoyage.status)) {
+            toast.error("Chỉ có thể di chuyển các tàu đang trong hàng đợi!");
+            return;
+        }
+
+        // 4. Validation: Product compatibility (if cross-lane)
+        let targetEquipmentId: string | null = movedVoyage.equipmentId || null;
+        if (isCrossLane) {
+            const destLane = lanes?.find((l: Lane) => l.id === destLaneId);
+            
+            if (!destLane) {
+                console.error('[DragEnd] Dest lane not found in data:', destLaneId);
+                return;
+            }
+
+            if (!destLane.equipments || destLane.equipments.length === 0) {
+                targetEquipmentId = null;
+            } else {
+                // Find first equipment that supports this product
+                const compatibleEquipment = destLane.equipments.find((eq: Equipment) => {
+                    if (!eq.products || eq.products.length === 0) return true;
+                    // Ensure we compare IDs correctly as strings
+                    return eq.products.some(p => String(p.id) === String(movedVoyage.productId));
+                });
+
+                if (!compatibleEquipment) {
+                    toast.error(`Luồng ${destLane.name} không có thiết bị hỗ trợ loại hàng ${movedVoyage.product?.name || ''}`);
+                    return;
+                }
+                targetEquipmentId = compatibleEquipment.id;
+            }
+        }
+
+        // 5. Prepare updates
+        const updates: any[] = [];
+        const revertState = [...localVoyages];
+
+        // Function to get ordered queue for a lane (excluding serving/completed)
+        const getLaneQueue = (laneId: string) => localVoyages
+            .filter(v => v.laneId === laneId && !restrictedStatuses.includes(v.status))
             .sort((a, b) => (a.queueNo || 0) - (b.queueNo || 0));
 
-        const [movedItem] = laneQueue.splice(sourceIndex, 1);
-        laneQueue.splice(destinationIndex, 0, movedItem);
+        // Function to get max queueNo from serving/other status to use as base
+        const getQueueBase = (laneId: string) => {
+            const servingTrips = localVoyages.filter(v => v.laneId === laneId && activeServingStatuses.includes(v.status));
+            return servingTrips.length > 0 ? Math.max(...servingTrips.map(v => v.queueNo || 0)) : 0;
+        };
 
-        // Find existing serving trips to offset the queueNo
-        const servingTrips = localVoyages.filter(v => v.laneId === laneId && ['LAM_HANG'].includes(v.status));
-        const maxServingQueueNo = servingTrips.length > 0 ? Math.max(...servingTrips.map(v => v.queueNo || 0)) : 0;
+        if (isCrossLane) {
+            // A. Remove from source
+            const sourceQueue = getLaneQueue(sourceLaneId).filter(v => v.id !== draggableId);
+            const sourceBase = getQueueBase(sourceLaneId);
+            sourceQueue.forEach((v, idx) => {
+                updates.push({ id: v.id, queueNo: sourceBase + idx + 1 });
+            });
 
-        // Calculate new queueNos
-        const updates = laneQueue.map((v, index) => ({
-            id: v.id,
-            queueNo: maxServingQueueNo + index + 1
-        }));
+            // B. Insert into destination
+            const destQueue = getLaneQueue(destLaneId);
+            const destBase = getQueueBase(destLaneId);
+            destQueue.splice(destination.index, 0, { ...movedVoyage, laneId: destLaneId });
+            destQueue.forEach((v, idx) => {
+                const up: any = { id: v.id, queueNo: destBase + idx + 1 };
+                if (v.id === draggableId) {
+                    up.laneId = destLaneId;
+                    up.equipmentId = targetEquipmentId;
+                }
+                updates.push(up);
+            });
+        } else {
+            // Internal move
+            const laneQueue = getLaneQueue(sourceLaneId);
+            const [movedItem] = laneQueue.splice(source.index, 1);
+            laneQueue.splice(destination.index, 0, movedItem);
 
-        // Optimistic update
+            const base = getQueueBase(sourceLaneId);
+            laneQueue.forEach((v, idx) => {
+                updates.push({ id: v.id, queueNo: base + idx + 1 });
+            });
+        }
+
+        // 6. Optimistic update local state
         const updatedVoyages = localVoyages.map(v => {
             const update = updates.find(u => u.id === v.id);
-            return update ? { ...v, queueNo: update.queueNo } : v;
+            if (update) {
+                const newV = { ...v, queueNo: update.queueNo };
+                if (update.laneId) newV.laneId = update.laneId;
+                if (update.equipmentId !== undefined) newV.equipmentId = update.equipmentId;
+                return newV;
+            }
+            return v;
         });
 
-        // Save current state for reversion before optimistic update
-        const revertState = [...localVoyages];
         setLocalVoyages(updatedVoyages);
 
-        // Open confirmation modal
+        // 7. Open confirmation modal
         setConfirmQueueUpdate({
             updates,
             revertVoyages: revertState
@@ -92,26 +210,20 @@ export default function PortDashboardContent() {
     const [isAlertModalOpen, setIsAlertModalOpen] = React.useState(false);
 
     const kpis = useMemo(() => {
-        if (!voyages) return null;
+        if (!localVoyages) return null;
         const now = getServerDate();
 
-        const vesselStats = { loading: 0, waiting: 0, delay: 0, departed: 0, delayedCount: 0 };
-        const activeVoyages = voyages.filter((t: Voyage) => mapStatus(t.status) !== 'DEPARTED' && mapStatus(t.status) !== 'CANCELLED');
+        const vesselStats = { serving: 0, queue: 0, handling: 0 };
+        const activeVoyages = localVoyages.filter((t: Voyage) => !['HOAN_THANH', 'HUY_BO'].includes(t.status));
+
+        const servingStatuses = ['LAM_HANG', 'DO_MON_DAU_RA'];
 
         activeVoyages.forEach((t: Voyage) => {
-            const uiStatus = mapStatus(t.status).toLowerCase();
-            if (uiStatus in vesselStats) {
-                vesselStats[uiStatus as keyof typeof vesselStats]++;
-            }
-
-            // Check for delays > 2h
-            if (uiStatus === 'waiting' && t.eta) {
-                const arrivalDate = new Date(t.eta);
-                if (now.getTime() - arrivalDate.getTime() > 120 * 60 * 1000) {
-                    vesselStats.delayedCount++;
-                }
-            } else if (uiStatus === 'delay') {
-                vesselStats.delayedCount++;
+            if (servingStatuses.includes(t.status)) {
+                vesselStats.serving++;
+                if (t.status === 'LAM_HANG') vesselStats.handling++;
+            } else {
+                vesselStats.queue++;
             }
         });
 
@@ -132,7 +244,7 @@ export default function PortDashboardContent() {
                     deviceStats.alerts.push(`Sự cố ${eq.name}`);
                 }
             });
-            if (laneActive || voyages.some((v: Voyage) => v.laneId === lane.id && mapStatus(v.status) === 'LOADING')) {
+            if (laneActive || localVoyages.some((v: Voyage) => v.laneId === lane.id && mapStatus(v.status) === 'LOADING')) {
                 activeLanesCount++;
             }
         });
@@ -174,16 +286,18 @@ export default function PortDashboardContent() {
             });
         }
 
-        // 3. Delayed Vessels
+        // 3. Delayed Vessels (Notification Alerts for all active statuses)
         activeVoyages.forEach((t: Voyage) => {
-            if (mapStatus(t.status) === 'WAITING' && t.eta) {
-                const arrivalDate = new Date(t.eta);
-                const diffMs = now.getTime() - arrivalDate.getTime();
-                if (diffMs > 120 * 60 * 1000) {
+            // Check for delays > 30m (Allow for all active statuses to show in messages)
+            if (!t.actualArrival && t.eta) {
+                const etaLocalStr = String(t.eta).replace(/Z|[+-]\d{2}(:\d{2})?$/, '');
+                const eta = safeDate(etaLocalStr);
+                const diffMs = now.getTime() - eta.getTime();
+                if (diffMs > 30 * 60 * 1000) {
                     sidebarAlerts.push({
                         type: 'vessel',
                         severity: 'ORANGE',
-                        title: `Tàu ${t.vessel?.name || t.voyageCode} trễ cập bến > 2h`,
+                        title: `Tàu ${t.vessel?.name || t.voyageCode} trễ cập bến > 30p`,
                         time: formatTime(t.eta),
                     });
                 }
@@ -213,7 +327,7 @@ export default function PortDashboardContent() {
     }
 
     const currentData = kpis || {
-        vesselStats: { loading: 0, waiting: 0, delay: 0, departed: 0, delayedCount: 0 },
+        vesselStats: { serving: 0, queue: 0, handling: 0, delayedCount: 0 },
         deviceStats: { busy: 0, total: 0, error: 0, alerts: [] },
         activeLanesCount: 0,
         totalPlan: 0,
@@ -223,7 +337,7 @@ export default function PortDashboardContent() {
     };
 
     const currentTimeString = formatTime(getServerDate());
-    const totalActiveVessels = currentData.vesselStats.loading + currentData.vesselStats.waiting + currentData.vesselStats.delay;
+    const totalActiveVessels = currentData.vesselStats.serving + currentData.vesselStats.queue;
 
     return (
         <div className="flex flex-col w-full h-full min-h-screen bg-slate-50 p-6 space-y-6 font-sans">
@@ -231,67 +345,74 @@ export default function PortDashboardContent() {
             {/* (Dashboard Header removed to maximize space for KPI and Lanes) */}
 
             {/* ACTIONABLE KPI BAR */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
-                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-[#00695C] flex flex-col justify-between hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start text-slate-500">
-                        <span className="font-medium text-slate-500">Tàu tại cảng</span>
-                        <Icon path={PATHS.ship} className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="flex items-baseline gap-2 mt-1.5">
-                        <span className="text-2xl font-black text-slate-900 tracking-tight">{totalActiveVessels}</span>
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                        <span className="text-[12px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">{currentData.vesselStats.loading} Làm hàng</span>
-                        <span className="text-[12px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">{currentData.vesselStats.waiting} Đang chờ</span>
-                    </div>
-                </div>
-
-                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-slate-800 flex flex-col justify-between hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start text-slate-500">
-                        <span className="font-medium text-slate-500">Luồng</span>
-                        <Icon path={PATHS.activity} className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="flex items-baseline gap-2 mt-1.5">
-                        <span className="text-2xl font-black text-slate-900 tracking-tight">{currentData.activeLanesCount}</span>
-                        <span className="text-xs font-semibold text-slate-400">/ {lanes?.length || 0}</span>
-                    </div>
-                    <span className="font-medium text-slate-500 mt-2 inline-block">Luồng</span>
-                </div>
-
-                <div
-                    onClick={() => setIsAlertModalOpen(true)}
-                    className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-slate-800 flex flex-col justify-between hover:shadow-md transition-all cursor-pointer group"
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 shrink-0">
+                <KPICard
+                    title="TÀU TẠI CẢNG"
+                    value={totalActiveVessels}
+                    icon={Ship}
+                    color="bg-sky-500"
                 >
-                    <div className="flex justify-between items-start text-slate-500 group-hover:text-slate-800 transition-colors">
-                        <span className="font-medium text-slate-500">Cần cẩu</span>
-                        <Icon path={PATHS.crane} className="w-3.5 h-3.5" />
+                    <div className="flex flex-wrap gap-2">
+                        <span className="text-[11px] font-black uppercase tracking-tight text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 border border-emerald-500/10 shadow-sm">
+                            <span className={cn("w-2 h-2 rounded-full bg-emerald-500", currentData.vesselStats.handling > 0 && "animate-pulse")}></span>
+                            {currentData.vesselStats.serving} Đang phục vụ
+                        </span>
+                        <span className="text-[11px] font-black uppercase tracking-tight text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 border border-slate-200 shadow-sm">
+                            <span className="w-2 h-2 rounded-full bg-slate-300"></span>
+                            {currentData.vesselStats.queue} Hàng đợi
+                        </span>
                     </div>
-                    <div className="flex items-baseline gap-2 mt-1.5">
-                        <span className="text-2xl font-black text-slate-900 tracking-tight">{currentData.deviceStats.busy}</span>
-                        <span className="font-medium text-slate-400">/ {currentData.deviceStats.total}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2">
-                        <span className="text-[12px] font-bold text-emerald-600 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>{currentData.deviceStats.busy} Đang hoạt động</span>
-                        <span className="text-[12px] font-bold text-red-600 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>{currentData.deviceStats.error} Lỗi</span>
-                    </div>
-                </div>
+                </KPICard>
 
-                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-[#00695C] flex flex-col justify-between hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start text-slate-500">
-                        <span className="font-medium text-slate-500">Sản lượng</span>
-                        <Icon path={PATHS.package} className="w-3.5 h-3.5" />
+                <KPICard
+                    title="LUỒNG HÀNG"
+                    value={currentData.activeLanesCount}
+                    unit={`/ ${lanes?.length || 0}`}
+                    icon={Activity}
+                    color="bg-emerald-500"
+                >
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                            <div 
+                                className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
+                                style={{ width: `${(currentData.activeLanesCount / (lanes?.length || 1)) * 100}%` }}
+                            />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400">
+                            {Math.round((currentData.activeLanesCount / (lanes?.length || 1)) * 100)}%
+                        </span>
                     </div>
-                    <div className="flex items-baseline gap-2 mt-1.5">
-                        <span className="text-2xl font-black text-slate-900 tracking-tight">{currentData.throughputPercent}%</span>
+                </KPICard>
+
+                <KPICard
+                    title="CẦN CẨU"
+                    value={currentData.deviceStats.busy}
+                    unit={`/ ${currentData.deviceStats.total}`}
+                    icon={Zap}
+                    color="bg-indigo-500"
+                    onClick={() => setIsAlertModalOpen(true)}
+                >
+                    <div className="flex gap-2">
+                        <span className="text-[11px] font-black uppercase tracking-tight text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg flex items-center gap-1">
+                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            {currentData.deviceStats.busy} Hoạt động
+                        </span>
+                        {currentData.deviceStats.error > 0 && (
+                            <span className="text-[11px] font-black uppercase tracking-tight text-red-600 bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" />
+                                {currentData.deviceStats.error} Lỗi
+                            </span>
+                        )}
                     </div>
-                    <div className="w-full bg-slate-100 h-1.5 rounded-full mt-2.5 overflow-hidden">
-                        <div className="bg-[#00695C] h-full rounded-full transition-all duration-1000" style={{ width: `${currentData.throughputPercent}%` }} />
-                    </div>
-                    <span className="text-xs font-medium">
-                        <span>{currentData.totalDone.toLocaleString()}  / </span>
-                        <span>{currentData.totalPlan.toLocaleString()} tấn</span>
-                    </span>
-                </div>
+                </KPICard>
+
+                <KPICard
+                    title="SẢN LƯỢNG CẦN LÀM"
+                    value={currentData.totalPlan.toLocaleString()}
+                    unit="T"
+                    icon={TrendingUp}
+                    color="bg-amber-500"
+                />
             </div>
 
             {/* MAIN AREA - FULL WIDTH KANBAN */}
@@ -301,8 +422,24 @@ export default function PortDashboardContent() {
                         {lanes?.map((lane: Lane) => {
                             const laneCranes = lane.equipments || [];
                             const laneTrips = localVoyages.filter((v: Voyage) => v.laneId === lane.id && !['HOAN_THANH', 'HUY_BO'].includes(v.status));
-                            const servingTrips = laneTrips.filter(v => ['LAM_HANG'].includes(v.status));
-                            const queueTrips = laneTrips.filter(v => !['LAM_HANG'].includes(v.status)).sort((a, b) => (a.queueNo || 0) - (b.queueNo || 0));
+                            
+                            // 1. Serving Area: Handling and Final Survey
+                            const servingStatuses = ['LAM_HANG', 'DO_MON_DAU_RA'];
+                            const servingTrips = laneTrips
+                                .filter(v => servingStatuses.includes(v.status))
+                                .sort((a, b) => {
+                                    // Ship currently handling cargo (LAM_HANG) always goes to the top
+                                    if (a.status === 'LAM_HANG' && b.status !== 'LAM_HANG') return -1;
+                                    if (a.status !== 'LAM_HANG' && b.status === 'LAM_HANG') return 1;
+                                    return 0;
+                                });
+
+                            // 2. Queue Area: Procedures, Initial Survey, Sampling, Draft, and Paused
+                            const queueStatuses = ['NHAP', 'THU_TUC', 'DO_MON_DAU_VAO', 'LAY_MAU', 'TAM_DUNG'];
+                            const queueTrips = laneTrips
+                                .filter(v => queueStatuses.includes(v.status))
+                                .sort((a, b) => (a.queueNo || 0) - (b.queueNo || 0));
+
                             const laneStatus = servingTrips.length > 0 ? 'NORMAL' : 'IDLE';
 
                             const renderTripCard = (trip: Voyage, isQueue: boolean, queueIndex: number) => {
@@ -311,11 +448,13 @@ export default function PortDashboardContent() {
                                 const volume = Number(trip.totalVolume) || 1;
                                 const progress = Math.min(100, Math.round((totalDone / volume) * 100));
 
-                                // Handle Delay Logic
+                                // Handle Delay Logic: Only warn on NHAP (Draft) if no arrival recorded and 30m past ETA
                                 let isWarning = false;
-                                if (mapStatus(trip.status) === 'WAITING' && trip.eta) {
-                                    const diffMs = getServerDate().getTime() - new Date(trip.eta).getTime();
-                                    isWarning = diffMs > 120 * 60 * 1000;
+                                if (trip.status === 'NHAP' && !trip.actualArrival && trip.eta) {
+                                    const now = getServerDate();
+                                    const eta = safeDate(trip.eta);
+                                    const diffMs = now.getTime() - eta.getTime();
+                                    isWarning = diffMs > 30 * 60 * 1000; // 30 minutes
                                 }
 
                                 const isUrgent = trip.priority === 'EMERGENCY';
@@ -325,13 +464,24 @@ export default function PortDashboardContent() {
                                     <div
                                         key={trip.id}
                                         onClick={() => setSelectedVoyageId(trip.id)}
-                                        className={`w-full bg-white rounded-lg border shadow-sm hover:shadow-md hover:border-[#00695C] cursor-pointer transition-all relative overflow-hidden group shrink-0 ${isWarning ? 'border-red-300 bg-red-50/30' : isUrgent ? 'border-slate-200 bg-rose-50/50' : 'border-slate-200'} p-3`}
+                                        className={cn(
+                                            "w-full rounded-lg border shadow-sm hover:shadow-md hover:border-[#00695C] cursor-pointer transition-all relative overflow-hidden group shrink-0 p-3",
+                                            isWarning ? "border-red-500 bg-red-50/80 animate-pulse" : 
+                                            isUrgent ? "bg-rose-50/50 border-slate-200" : 
+                                            "bg-white border-slate-200"
+                                        )}
+                                        title={isWarning ? "Cảnh báo: Chuyến tàu trễ giờ cập cảng (quá 30p)" : undefined}
                                     >
                                         <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${tStyles.solidBg} transition-colors group-hover:w-2`}></div>
 
 
                                         <div className="flex justify-between items-start mb-2 pl-2">
                                             <div className="flex items-start gap-2 max-w-[72%]">
+                                                {isWarning && (
+                                                    <span className="absolute -right-8 -top-8 w-16 h-16 bg-red-500 rotate-45 flex items-end justify-center pb-1 text-[10px] font-black text-white shadow-sm z-10">
+                                                        LATE
+                                                    </span>
+                                                )}
                                                 {isQueue && (
                                                     <div className="shrink-0 bg-slate-100 border border-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded text-xs mt-0.5">
                                                         #{queueIndex}
@@ -442,55 +592,64 @@ export default function PortDashboardContent() {
 
                                     {/* LANE CONTENT: Vertical List */}
                                     <div className="flex-1 p-3 bg-slate-50/50 flex flex-col gap-3 overflow-y-auto custom-scrollbar items-start">
-                                        {laneTrips.length === 0 ? (
-                                            <div className="w-full flex-1 flex flex-col items-center justify-center p-6 rounded-lg text-slate-400">
-                                                <Icon path={PATHS.anchor} className="w-8 h-8 opacity-20 mb-2" />
-                                                <span className="font-semibold text-slate-500">Chưa có tàu</span>
-                                                <span className="text-[12px] font-medium mt-1">Sẵn sàng tiếp nhận</span>
-                                            </div>
-                                        ) : (
-                                            <div className="w-full flex flex-col gap-4">
-                                                {/* SERVING SECTION */}
-                                                {servingTrips.length > 0 && (
-                                                    <div className="w-full">
-                                                        <h4 className="text-[13px] font-black text-emerald-700 uppercase tracking-widest mb-2 pl-2 border-l-2 border-emerald-500 pb-0.5">Đang làm hàng</h4>
-                                                        <div className="flex flex-col gap-2">
-                                                            {servingTrips.map((trip: Voyage) => renderTripCard(trip, false, 0))}
-                                                        </div>
+                                        <div className="w-full flex flex-col gap-4">
+                                            {/* SERVING SECTION */}
+                                            {servingTrips.length > 0 && (
+                                                <div className="w-full">
+                                                    <h4 className="text-[13px] font-black text-emerald-700 uppercase tracking-widest mb-2 pl-2 border-l-2 border-emerald-500 pb-0.5">Đang làm hàng</h4>
+                                                    <div className="flex flex-col gap-2">
+                                                        {servingTrips.map((trip: Voyage) => renderTripCard(trip, false, 0))}
                                                     </div>
-                                                )}
-
-                                                {/* QUEUE SECTION */}
-                                                <div className="w-full flex-1">
-                                                    <h4 className={`text-[13px] font-black text-slate-500 uppercase tracking-widest mb-2 pl-2 border-l-2 border-slate-300 pb-0.5 ${servingTrips.length > 0 ? 'mt-2' : ''}`}>Hàng đợi ({queueTrips.length})</h4>
-                                                    <Droppable droppableId={lane.id}>
-                                                        {(provided: any) => (
-                                                            <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col gap-2 min-h-[100px]">
-                                                                {queueTrips.map((trip: Voyage, index: number) => (
-                                                                    <Draggable key={trip.id} draggableId={trip.id} index={index}>
-                                                                        {(provided: any, snapshot: any) => (
-                                                                            <div
-                                                                                ref={provided.innerRef}
-                                                                                {...provided.draggableProps}
-                                                                                {...provided.dragHandleProps}
-                                                                                style={
-                                                                                    snapshot.isDragging
-                                                                                        ? { ...provided.draggableProps.style, filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.15))', zIndex: 50, opacity: 0.9 }
-                                                                                        : provided.draggableProps.style
-                                                                                }
-                                                                            >
-                                                                                {renderTripCard(trip, true, index + 1)}
-                                                                            </div>
-                                                                        )}
-                                                                    </Draggable>
-                                                                ))}
-                                                                {provided.placeholder}
-                                                            </div>
-                                                        )}
-                                                    </Droppable>
                                                 </div>
+                                            )}
+
+                                            {/* QUEUE SECTION / DROP ZONE */}
+                                            <div className="w-full flex-1 flex flex-col">
+                                                <h4 className={`text-[13px] font-black text-slate-500 uppercase tracking-widest mb-2 pl-2 border-l-2 border-slate-300 pb-0.5 ${(servingTrips.length > 0 || laneTrips.length === 0) ? 'mt-2' : ''}`}>
+                                                    Hàng đợi ({queueTrips.length})
+                                                </h4>
+                                                
+                                                <Droppable droppableId={lane.id}>
+                                                    {(provided: any, snapshot: any) => (
+                                                        <div 
+                                                            {...provided.droppableProps} 
+                                                            ref={provided.innerRef} 
+                                                            className={`flex flex-col gap-2 min-h-[150px] transition-colors rounded-lg p-1 ${
+                                                                snapshot.isDraggingOver ? 'bg-blue-50/50 outline-2 outline-dashed outline-blue-200' : ''
+                                                            }`}
+                                                        >
+                                                            {queueTrips.length === 0 && (
+                                                                <div className="w-full flex-1 flex flex-col items-center justify-center p-6 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-white/50">
+                                                                    <Icon path={PATHS.anchor} className="w-8 h-8 opacity-20 mb-2" />
+                                                                    <span className="font-semibold text-slate-400">Chưa có tàu</span>
+                                                                    <span className="text-[12px] font-medium mt-1">Kéo thả vào đây để xếp hàng</span>
+                                                                </div>
+                                                            )}
+                                                            
+                                                            {queueTrips.map((trip: Voyage, index: number) => (
+                                                                <Draggable key={trip.id} draggableId={trip.id} index={index}>
+                                                                    {(provided: any, snapshot: any) => (
+                                                                        <div
+                                                                            ref={provided.innerRef}
+                                                                            {...provided.draggableProps}
+                                                                            {...provided.dragHandleProps}
+                                                                            style={
+                                                                                snapshot.isDragging
+                                                                                    ? { ...provided.draggableProps.style, filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.15))', zIndex: 50, opacity: 0.9 }
+                                                                                    : provided.draggableProps.style
+                                                                            }
+                                                                        >
+                                                                            {renderTripCard(trip, true, index + 1)}
+                                                                        </div>
+                                                                    )}
+                                                                </Draggable>
+                                                            ))}
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )}
+                                                </Droppable>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -666,7 +825,6 @@ export default function PortDashboardContent() {
                                 Bạn có chắc chắn muốn thay đổi thứ tự hàng đợi của tàu này?
                             </p>
                             <div className="flex gap-3">
-                            <div className="flex gap-3">
                                 <Button
                                     variant="outline"
                                     className="flex-1 rounded-xl h-11"
@@ -697,7 +855,6 @@ export default function PortDashboardContent() {
                                 >
                                     {updateQueueMutation.isPending ? 'Đang cập nhật...' : 'Xác nhận'}
                                 </Button>
-                            </div>
                             </div>
                         </div>
                     </div>

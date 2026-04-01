@@ -49,13 +49,13 @@ export const qltauApi = {
         api.post<any[]>('/lanes/suggest', data).then((res: any) => res),
 
 
-    updateVoyageStatus: (id: string, status: string, reason?: string, userId?: string) =>
-        api.patch<Voyage>(`/voyages/${id}/status`, { status, reason, userId }).then((res: any) => res),
+    updateVoyageStatus: (id: string, status: string, reason?: string, userId?: string, force?: boolean) =>
+        api.patch<Voyage>(`/voyages/${id}/status`, { status, reason, userId, force }).then((res: any) => res),
 
     updateVoyageReadiness: (id: string, checklist: any) =>
         api.patch<Voyage>(`/voyages/${id}/readiness`, checklist).then((res: any) => res),
 
-    reorderVoyageQueue: async (updates: { id: string, queueNo: number }[]) => {
+    reorderVoyageQueue: async (updates: { id: string, queueNo: number, laneId?: string, equipmentId?: string | null }[]) => {
         const response = await api.post('/voyages/reorder-queue', updates);
         return response.data;
     },

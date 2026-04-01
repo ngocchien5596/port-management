@@ -56,8 +56,8 @@ export class VoyageController {
 
     static async updateStatus(req: Request, res: Response) {
         try {
-            const { status, reason, userId } = req.body;
-            const voyage = await VoyageService.updateStatus(req.params.id, status, reason, userId);
+            const { status, reason, userId, force } = req.body;
+            const voyage = await VoyageService.updateStatus(req.params.id, status, reason, userId, force);
             res.json(voyage);
         } catch (error: any) {
             res.status(400).json({ message: error.message });

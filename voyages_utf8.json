@@ -1,0 +1,189 @@
+﻿{
+    "value":  [
+                  {
+                      "id":  "aee495fe-1352-40da-8d19-30910588c4a3",
+                      "voyageCode":  19,
+                      "vesselId":  "60ec6715-6e8c-48ad-b0ce-a08048f2aa6d",
+                      "berthId":  null,
+                      "productId":  "419cd9b4-d27c-44ea-9423-2a6a56f7b250",
+                      "type":  "NHAP",
+                      "status":  "NHAP",
+                      "priority":  "NORMAL",
+                      "queueNo":  1,
+                      "isYielded":  false,
+                      "eta":  "2026-02-24T03:14:00.000Z",
+                      "etd":  null,
+                      "totalVolume":  "55",
+                      "actualArrival":  null,
+                      "actualDeparture":  null,
+                      "readinessChecklist":  {
+                                                 "draft":  false,
+                                                 "sample":  false,
+                                                 "weather":  true,
+                                                 "equipment":  false,
+                                                 "procedure":  false
+                                             },
+                      "cancelReason":  null,
+                      "laneId":  "cmlny3nhw0009baxwkwcwplc0",
+                      "createdAt":  "2026-02-24T03:14:16.422Z",
+                      "updatedAt":  "2026-02-24T03:14:16.422Z",
+                      "vessel":  {
+                                     "id":  "60ec6715-6e8c-48ad-b0ce-a08048f2aa6d",
+                                     "code":  "VESSEL_002",
+                                     "name":  null,
+                                     "customerName":  "Evergreen Marine",
+                                     "capacity":  "45000",
+                                     "customerPhone":  null,
+                                     "imoCode":  null,
+                                     "vesselType":  "CONTAINER",
+                                     "createdAt":  "2026-02-12T09:58:46.646Z",
+                                     "updatedAt":  "2026-02-12T09:58:46.646Z"
+                                 },
+                      "berth":  null,
+                      "product":  {
+                                      "id":  "419cd9b4-d27c-44ea-9423-2a6a56f7b250",
+                                      "code":  "PROD_1771174825984",
+                                      "name":  "Than",
+                                      "unit":  "TON",
+                                      "type":  "IMPORT",
+                                      "defaultProductivity":  "100",
+                                      "createdAt":  "2026-02-15T10:00:26.011Z",
+                                      "updatedAt":  "2026-02-15T10:00:26.011Z"
+                                  },
+                      "progress":  [
+
+                                   ]
+                  },
+                  {
+                      "id":  "c2d5255c-3aa5-4ec4-b10e-d70d86d349b3",
+                      "voyageCode":  2,
+                      "vesselId":  "5a72b51d-716e-4cf7-803d-3e9637be45f7",
+                      "berthId":  null,
+                      "productId":  "299738ae-a630-4cab-8394-b9833bea9479",
+                      "type":  "XUAT",
+                      "status":  "HOAN_THANH",
+                      "priority":  "EMERGENCY",
+                      "queueNo":  1,
+                      "isYielded":  false,
+                      "eta":  null,
+                      "etd":  "2026-02-24T06:42:34.715Z",
+                      "totalVolume":  "100",
+                      "actualArrival":  null,
+                      "actualDeparture":  "2026-02-24T07:15:53.184Z",
+                      "readinessChecklist":  {
+                                                 "draft":  true,
+                                                 "sample":  true,
+                                                 "weather":  true,
+                                                 "equipment":  true,
+                                                 "procedure":  true
+                                             },
+                      "cancelReason":  null,
+                      "laneId":  "cmlny3uac000abaxwdb3o8kxp",
+                      "createdAt":  "2026-02-17T11:28:59.195Z",
+                      "updatedAt":  "2026-02-24T00:15:53.186Z",
+                      "vessel":  {
+                                     "id":  "5a72b51d-716e-4cf7-803d-3e9637be45f7",
+                                     "code":  "VESSEL_001",
+                                     "name":  null,
+                                     "customerName":  "Maersk Line",
+                                     "capacity":  "50000",
+                                     "customerPhone":  null,
+                                     "imoCode":  null,
+                                     "vesselType":  "CONTAINER",
+                                     "createdAt":  "2026-02-12T09:58:46.646Z",
+                                     "updatedAt":  "2026-02-12T09:58:46.646Z"
+                                 },
+                      "berth":  null,
+                      "product":  {
+                                      "id":  "299738ae-a630-4cab-8394-b9833bea9479",
+                                      "code":  "PROD_1771174870373",
+                                      "name":  "Xi măng xuất khẩu",
+                                      "unit":  "TON",
+                                      "type":  "EXPORT",
+                                      "defaultProductivity":  "100",
+                                      "createdAt":  "2026-02-15T10:01:10.381Z",
+                                      "updatedAt":  "2026-02-15T10:01:10.381Z"
+                                  },
+                      "progress":  [
+                                       {
+                                           "id":  "c86c7b65-65b5-4e16-af72-2fe32902bef5",
+                                           "voyageId":  "c2d5255c-3aa5-4ec4-b10e-d70d86d349b3",
+                                           "amount":  "11",
+                                           "hours":  "8",
+                                           "productivity":  "1.375",
+                                           "cumulative":  "101",
+                                           "userId":  "cmlqxahkj00012hdrq3tc6h4x",
+                                           "notes":  null,
+                                           "shiftId":  null,
+                                           "createdAt":  "2026-02-23T23:42:34.667Z"
+                                       }
+                                   ]
+                  },
+                  {
+                      "id":  "d6bf44c6-e2ee-4e78-8545-ea9749f4d1dc",
+                      "voyageCode":  1,
+                      "vesselId":  "0e14da62-92f5-42a9-8108-2bc85326f073",
+                      "berthId":  null,
+                      "productId":  "419cd9b4-d27c-44ea-9423-2a6a56f7b250",
+                      "type":  "NHAP",
+                      "status":  "HOAN_THANH",
+                      "priority":  "NORMAL",
+                      "queueNo":  1,
+                      "isYielded":  false,
+                      "eta":  null,
+                      "etd":  "2026-02-24T07:16:55.119Z",
+                      "totalVolume":  "1000",
+                      "actualArrival":  null,
+                      "actualDeparture":  "2026-02-24T07:17:06.525Z",
+                      "readinessChecklist":  {
+                                                 "draft":  true,
+                                                 "sample":  true,
+                                                 "weather":  true,
+                                                 "equipment":  true,
+                                                 "procedure":  true
+                                             },
+                      "cancelReason":  null,
+                      "laneId":  "cmlny3nhw0009baxwkwcwplc0",
+                      "createdAt":  "2026-02-17T10:56:11.131Z",
+                      "updatedAt":  "2026-02-24T00:17:06.526Z",
+                      "vessel":  {
+                                     "id":  "0e14da62-92f5-42a9-8108-2bc85326f073",
+                                     "code":  "QN-1111",
+                                     "name":  null,
+                                     "customerName":  "KH1",
+                                     "capacity":  "1000",
+                                     "customerPhone":  "",
+                                     "imoCode":  null,
+                                     "vesselType":  null,
+                                     "createdAt":  "2026-02-15T08:52:47.771Z",
+                                     "updatedAt":  "2026-02-15T08:52:47.771Z"
+                                 },
+                      "berth":  null,
+                      "product":  {
+                                      "id":  "419cd9b4-d27c-44ea-9423-2a6a56f7b250",
+                                      "code":  "PROD_1771174825984",
+                                      "name":  "Than",
+                                      "unit":  "TON",
+                                      "type":  "IMPORT",
+                                      "defaultProductivity":  "100",
+                                      "createdAt":  "2026-02-15T10:00:26.011Z",
+                                      "updatedAt":  "2026-02-15T10:00:26.011Z"
+                                  },
+                      "progress":  [
+                                       {
+                                           "id":  "7ff9e101-788e-4908-b378-f97ca01b353a",
+                                           "voyageId":  "d6bf44c6-e2ee-4e78-8545-ea9749f4d1dc",
+                                           "amount":  "1000",
+                                           "hours":  "8",
+                                           "productivity":  "125",
+                                           "cumulative":  "1000",
+                                           "userId":  "cmlqxahkj00012hdrq3tc6h4x",
+                                           "notes":  null,
+                                           "shiftId":  null,
+                                           "createdAt":  "2026-02-24T00:16:55.004Z"
+                                       }
+                                   ]
+                  }
+              ],
+    "Count":  3
+}

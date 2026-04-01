@@ -82,7 +82,6 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
     { key: 'dashboard', label: 'Bảng điều khiển', href: '/dashboard', icon: DashboardIcon },
     { key: 'voyages', label: 'Quản lý chuyến tàu', href: '/voyages', icon: VoyageIcon, roles: ['MANAGER', 'STAFF'] },
-    { key: 'vessels', label: 'Danh mục tàu', href: '/vessels', icon: VesselIcon, roles: ['MANAGER', 'STAFF'] },
     { key: 'incidents', label: 'Nhật ký sự cố', href: '/incidents', icon: IncidentIcon, roles: ['MANAGER', 'STAFF'] },
     {
         key: 'reports',
@@ -101,6 +100,7 @@ const menuItems: MenuItem[] = [
         icon: SettingsIcon,
         roles: ['MANAGER', 'STAFF'], // Allow parents but children will be restricted
         children: [
+            { key: 'vessels', label: 'Danh mục tàu', href: '/vessels', icon: VesselIcon, roles: ['MANAGER', 'STAFF'] },
             { key: 'cargoTypes', label: 'Loại hàng', href: '/config/cargo-types', icon: Package, roles: ['MANAGER', 'STAFF'] },
             { key: 'lanes', label: 'Quản lý luồng', href: '/config/lanes', icon: Map, roles: ['MANAGER'] },
             { key: 'equipment', label: 'Thiết bị cẩu', href: '/config/equipment', icon: Cpu, roles: ['MANAGER'] },

@@ -128,8 +128,8 @@ export const useDeleteVoyage = () => {
 export const useUpdateVoyageStatus = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, status, reason, userId }: { id: string; status: string; reason?: string; userId?: string }) =>
-            qltauApi.updateVoyageStatus(id, status, reason, userId),
+        mutationFn: ({ id, status, reason, userId, force }: { id: string; status: string; reason?: string; userId?: string; force?: boolean }) =>
+            qltauApi.updateVoyageStatus(id, status, reason, userId, force),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['qltau', 'voyages'] });
             queryClient.invalidateQueries({ queryKey: ['qltau', 'voyage', data.id] });

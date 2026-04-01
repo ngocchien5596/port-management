@@ -361,13 +361,13 @@ export default function VoyagesPage() {
 
             <StatusTransitionModal
                 isOpen={!!statusModalVoyage}
-                voyage={statusModalVoyage}
+                voyage={voyages?.find(v => v.id === statusModalVoyage?.id) || statusModalVoyage}
                 onClose={() => setStatusModalVoyage(null)}
             />
 
             <AddShiftProgressModal
                 isOpen={!!progressModalVoyage}
-                voyage={progressModalVoyage}
+                voyage={voyages?.find(v => v.id === progressModalVoyage?.id) || progressModalVoyage}
                 onClose={() => setProgressModalVoyage(null)}
             />
 

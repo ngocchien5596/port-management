@@ -16,7 +16,8 @@ export class LaneService {
                         },
                         voyages: {
                             where: { status: 'LAM_HANG' }
-                        }
+                        },
+                        products: true
                     }
                 }
             },
@@ -44,7 +45,8 @@ export class LaneService {
                         },
                         voyages: {
                             where: { status: 'LAM_HANG' }
-                        }
+                        },
+                        products: true
                     }
                 }
             }

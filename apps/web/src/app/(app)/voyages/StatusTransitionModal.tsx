@@ -35,6 +35,8 @@ export default function StatusTransitionModal({ isOpen, onClose, voyage }: Statu
         weather: false,
     });
     const [error, setError] = useState('');
+    const [isForceConfirm, setIsForceConfirm] = useState(false);
+    const [confirmChecked, setConfirmChecked] = useState(false);
 
     const updateStatusMutation = useUpdateVoyageStatus();
     const updateReadinessMutation = useUpdateVoyageReadiness();
@@ -42,15 +44,17 @@ export default function StatusTransitionModal({ isOpen, onClose, voyage }: Statu
     const { data: allVoyages } = useVoyages();
 
     useEffect(() => {
-        if (voyage) {
+        if (voyage && isOpen) {
+            // Only set initial status if we just opened or if selecting a different voyage
             setSelectedStatus(voyage.status);
+            
             // Default check next logical status if possible
             const currentIndex = STATUS_SEQUENCE.findIndex(s => s.value === voyage.status);
             if (currentIndex >= 0 && currentIndex < STATUS_SEQUENCE.length - 1) {
                 setSelectedStatus(STATUS_SEQUENCE[currentIndex + 1].value);
             }
 
-            // Set initial checklist if changing to LAM_HANG
+            // Set initial checklist
             const existingChecklist = (voyage as any).readinessChecklist;
             if (existingChecklist) {
                 setChecklist({
@@ -61,8 +65,27 @@ export default function StatusTransitionModal({ isOpen, onClose, voyage }: Statu
                     weather: !!existingChecklist.weather,
                 });
             }
+
+            // If we have a force confirm error but the data has updated to be sufficient, clear it
+            if (isForceConfirm && error.includes('thấp hơn sản lượng mục tiêu')) {
+                const targetVolume = Number(voyage.totalVolume || 0);
+                const currentProduction = (voyage as any).progress?.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0) || 0;
+                
+                if (currentProduction >= targetVolume && targetVolume > 0) {
+                    setError('');
+                    setIsForceConfirm(false);
+                    setConfirmChecked(false);
+                }
+            }
         }
-    }, [voyage, isOpen]);
+        
+        // Reset confirmation only when opening or closing
+        if (!isOpen) {
+            setIsForceConfirm(false);
+            setConfirmChecked(false);
+            setError('');
+        }
+    }, [voyage, voyage?.id, isOpen]); // Listen to whole voyage for production changes
 
     if (!isOpen || !voyage) return null;
 
@@ -91,13 +114,29 @@ export default function StatusTransitionModal({ isOpen, onClose, voyage }: Statu
                 id: voyage.id,
                 status: selectedStatus,
                 reason: reason.trim() || undefined,
-                userId: user?.id
+                userId: user?.id,
+                force: isForceConfirm && confirmChecked
             });
 
             onClose();
         } catch (err: any) {
-            setError(err.response?.data?.message || err.message || 'Có lỗi xảy ra khi lưu dữ liệu.');
+            const errorMessage = err.response?.data?.message || err.message || 'Có lỗi xảy ra khi lưu dữ liệu.';
+            
+            if (errorMessage.includes('[PROMPT_CONFIRM]')) {
+                const cleanMessage = errorMessage.replace('[PROMPT_CONFIRM]', '').trim();
+                setError(cleanMessage);
+                setIsForceConfirm(true);
+            } else {
+                setError(errorMessage);
+            }
         }
+    };
+
+    const handleSelectStatus = (val: string) => {
+        setSelectedStatus(val);
+        setIsForceConfirm(false);
+        setConfirmChecked(false);
+        setError('');
     };
 
     const isLamHang = selectedStatus === 'LAM_HANG';
@@ -133,9 +172,26 @@ export default function StatusTransitionModal({ isOpen, onClose, voyage }: Statu
                     </div>
 
                     {error && (
-                        <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex gap-2 text-red-600 text-sm">
-                            <AlertTriangle size={18} className="shrink-0" />
-                            <p>{error}</p>
+                        <div className={`p-4 rounded-xl flex gap-3 ${isForceConfirm ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-red-50 border border-red-100 text-red-600'} text-sm`}>
+                            {isForceConfirm ? <AlertTriangle size={20} className="shrink-0 text-amber-500" /> : <AlertTriangle size={20} className="shrink-0" />}
+                            <div className="space-y-3">
+                                <p className="font-medium leading-relaxed">{error}</p>
+                                {isForceConfirm && (
+                                    <label className="flex items-center gap-2 cursor-pointer select-none py-1 group">
+                                        <div className="relative flex items-center">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={confirmChecked}
+                                                onChange={(e) => setConfirmChecked(e.target.checked)}
+                                                className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500 transition-colors"
+                                            />
+                                        </div>
+                                        <span className="text-sm font-semibold text-amber-900 group-hover:text-amber-700 transition-colors">
+                                            Tôi xác nhận hoàn thành dù thiếu sản lượng
+                                        </span>
+                                    </label>
+                                )}
+                            </div>
                         </div>
                     )}
 
@@ -144,7 +200,7 @@ export default function StatusTransitionModal({ isOpen, onClose, voyage }: Statu
                         <label className="block text-sm font-semibold text-slate-700 mb-2">Trạng thái mới</label>
                         <select
                             value={selectedStatus}
-                            onChange={(e) => setSelectedStatus(e.target.value)}
+                            onChange={(e) => handleSelectStatus(e.target.value)}
                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand bg-white"
                         >
                             <optgroup label="Quy trình chuẩn">
@@ -255,8 +311,17 @@ export default function StatusTransitionModal({ isOpen, onClose, voyage }: Statu
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={updateStatusMutation.isPending || updateReadinessMutation.isPending || (isLamHang && Object.values(checklist).some(v => !v))}
-                        className="px-5 py-2.5 rounded-xl font-semibold text-white bg-brand hover:bg-brand-hover transition-colors disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-brand/20"
+                        disabled={
+                            updateStatusMutation.isPending || 
+                            updateReadinessMutation.isPending || 
+                            (isLamHang && Object.values(checklist).some(v => !v)) ||
+                            (isForceConfirm && !confirmChecked)
+                        }
+                        className={`px-5 py-2.5 rounded-xl font-semibold text-white transition-all flex items-center gap-2 shadow-lg ${
+                            isForceConfirm 
+                                ? (confirmChecked ? 'bg-brand hover:bg-brand-hover shadow-brand/20' : 'bg-slate-400 cursor-not-allowed shadow-none') 
+                                : 'bg-brand hover:bg-brand-hover shadow-brand/20'
+                        }`}
                     >
                         {(updateStatusMutation.isPending || updateReadinessMutation.isPending) ? 'Đang lưu...' : 'Xác nhận cập nhật'}
                         {!updateStatusMutation.isPending && !updateReadinessMutation.isPending && <CheckCircle size={18} />}

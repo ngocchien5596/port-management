@@ -36,17 +36,28 @@ app.use(cors({
         // Allow requests with no origin (mobile apps, curl, etc.)
         if (!origin) return callback(null, true);
 
-        // Normalize origin and frontendUrl by removing trailing slashes
-        const normalizedOrigin = origin.replace(/\/$/, '');
-        const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
+        // Normalize for comparison
+        const normalizedOrigin = origin.replace(/\/$/, '').toLowerCase();
+        const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '').toLowerCase();
 
-        // Allow any localhost port in development
-        if (normalizedOrigin.match(/^http:\/\/localhost:\d+$/)) return callback(null, true);
+        // Debug logging (View this in Render -> Logs)
+        console.log(`[CORS] Request from: "${normalizedOrigin}", Allowed: "${frontendUrl}"`);
 
-        // Allow configured frontend URL
-        if (frontendUrl && normalizedOrigin === frontendUrl) return callback(null, true);
+        // Check against localhost
+        if (normalizedOrigin.match(/^http:\/\/localhost:\d+$/)) {
+            return callback(null, true);
+        }
 
-        callback(null, false);
+        // Check against configured URL or fallback
+        if (
+            (frontendUrl && normalizedOrigin === frontendUrl) ||
+            normalizedOrigin === 'https://port-management-web.vercel.app'
+        ) {
+            return callback(null, true);
+        }
+
+        console.error(`[CORS] Blocked origin: ${origin}`);
+        callback(null, false); // Don't allow
     },
     credentials: true,
 }));

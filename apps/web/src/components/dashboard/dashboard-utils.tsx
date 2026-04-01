@@ -1,4 +1,5 @@
 import { Voyage } from '@/features/qltau/types';
+import { VOYAGE_STATUS_CONFIG } from '@/constants/voyage';
 
 export const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -51,11 +52,36 @@ export const STATUS_LABELS: Record<string, string> = {
 };
 
 export const getStatusLabel = (status: string) => {
+    // Priority 1: Use the global VOYAGE_STATUS_CONFIG which has detailed labels (Làm thủ tục, Đo mớn...)
+    if (VOYAGE_STATUS_CONFIG[status]) {
+        return VOYAGE_STATUS_CONFIG[status].label;
+    }
+    
+    // Priority 2: Fallback to mapped UI status labels
     const uiStatus = mapStatus(status).toUpperCase();
     return STATUS_LABELS[uiStatus] || status;
 };
 
 export const getStatusStyles = (status: string) => {
+    // Priority 1: Use the global VOYAGE_STATUS_CONFIG colors
+    if (VOYAGE_STATUS_CONFIG[status]) {
+        const config = VOYAGE_STATUS_CONFIG[status];
+        
+        // We need to map Tailwind text-xxx, bg-xxx etc. to the format dashboard-utils expects
+        // Many styles use emerald-500/10 format which is similar to bg-emerald-50
+        
+        // Default mappings:
+        const bg = config.bg.includes('/') ? config.bg : `${config.bg.replace('bg-', 'bg-')}/30`;
+        const text = config.color;
+        const border = config.border.replace('border-', 'border-').replace('100', '200').concat('/40');
+        const dot = config.color.replace('text-', 'bg-');
+        const solidBg = config.color.replace('text-', 'bg-').replace('-700', '-600');
+        const solidText = 'text-white';
+
+        return { bg, text, border, dot, solidBg, solidText };
+    }
+
+    // Priority 2: Fallback to existing mapped UI status styles
     const uiStatus = mapStatus(status).toUpperCase();
     switch (uiStatus) {
         case 'LOADING': case 'ACTIVE': case 'NORMAL': case 'BUSY':
