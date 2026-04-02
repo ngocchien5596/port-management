@@ -345,7 +345,7 @@ export default function PortDashboardContent() {
             {/* (Dashboard Header removed to maximize space for KPI and Lanes) */}
 
             {/* ACTIONABLE KPI BAR */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 shrink-0">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
                 <KPICard
                     title="TÀU TẠI CẢNG"
                     value={totalActiveVessels}
@@ -415,10 +415,10 @@ export default function PortDashboardContent() {
                 />
             </div>
 
-            {/* MAIN AREA - FULL WIDTH KANBAN */}
-            <div className="flex-1 min-h-0 overflow-hidden w-full">
+            {/* MAIN AREA - RESPONSIVE KANBAN LANES */}
+            <div className="flex-1 min-h-0 w-full overflow-y-auto custom-scrollbar">
                 <DragDropContext onDragEnd={handleDragEnd}>
-                    <div className="w-full flex flex-row gap-6 overflow-x-auto overflow-y-hidden custom-scrollbar pb-4 min-h-[600px] h-full items-stretch">
+                    <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 items-stretch">
                         {lanes?.map((lane: Lane) => {
                             const laneCranes = lane.equipments || [];
                             const laneTrips = localVoyages.filter((v: Voyage) => v.laneId === lane.id && !['HOAN_THANH', 'HUY_BO'].includes(v.status));
@@ -555,7 +555,7 @@ export default function PortDashboardContent() {
                             };
 
                             return (
-                                <div key={lane.id} className="w-80 shrink-0 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden relative group h-full max-h-full">
+                                <div key={lane.id} className="w-full bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden relative group min-h-[400px]">
 
                                     {/* LANE HEADER: Compact Top Header */}
                                     <div className="w-full shrink-0 bg-[#00695C] text-white px-3 py-2.5 flex flex-col gap-2 border-b border-[#004D40]">
