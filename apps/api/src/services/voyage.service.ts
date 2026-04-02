@@ -1136,25 +1136,81 @@ export class VoyageService {
 
 
 
-    static async reorderQueue(updates: { id: string, queueNo: number, laneId?: string, equipmentId?: string | null }[]) {
+    static async reorderQueue(updates: { id: string, queueNo: number, laneId?: string, equipmentId?: string | null }[], userId?: string) {
         return prisma.$transaction(async (tx) => {
+            // Fetch current state for comparison and names for logging
+            const voyageIds = updates.map(u => u.id);
+            const laneIds = [...new Set(updates.filter(u => u.laneId).map(u => u.laneId as string))];
+            const equipmentIds = [...new Set(updates.filter(u => u.equipmentId).map(u => u.equipmentId as string))];
+
+            const [currentVoyages, lanes, equipments] = await Promise.all([
+                tx.voyage.findMany({ 
+                    where: { id: { in: voyageIds } },
+                    select: { id: true, queueNo: true, laneId: true, equipmentId: true }
+                }),
+                tx.lane.findMany({ where: { id: { in: laneIds } } }),
+                tx.equipment.findMany({ where: { id: { in: equipmentIds } } })
+            ]);
+
+            const findLane = (id?: string) => lanes.find(l => l.id === id)?.name;
+            const findEquip = (id?: string | null) => equipments.find(e => e.id === id)?.name;
+
             const results = [];
             for (const item of updates) {
+                const currentVoyage = currentVoyages.find(v => v.id === item.id);
+                const oldQueueNo = currentVoyage?.queueNo ?? 0;
+
                 const data: any = { queueNo: item.queueNo };
                 if (item.laneId) data.laneId = item.laneId;
                 if (item.equipmentId !== undefined) {
                     data.equipmentId = item.equipmentId;
                 }
 
+                // Update the voyage
                 results.push(
                     tx.voyage.update({
                         where: { id: item.id },
                         data
                     })
                 );
+
+                // Create a history log for this specific voyage
+                const descriptions = [`Số thứ tự: ${oldQueueNo} -> ${item.queueNo}`];
+                
+                // Only log lane change if it actually changes
+                if (item.laneId && item.laneId !== currentVoyage?.laneId) {
+                    descriptions.push(`Chuyển sang Cầu: ${findLane(item.laneId) || item.laneId}`);
+                }
+                
+                // Only log equipment change if it actually changes
+                if (item.equipmentId !== undefined && item.equipmentId !== currentVoyage?.equipmentId) {
+                    if (item.equipmentId) {
+                        descriptions.push(`Chỉ định Thiết bị: ${findEquip(item.equipmentId) || item.equipmentId}`);
+                    } else if (item.equipmentId === null) {
+                        descriptions.push(`Gỡ bỏ Thiết bị`);
+                    }
+                }
+
+                results.push(
+                    tx.voyageEvent.create({
+                        data: {
+                            voyageId: item.id,
+                            type: 'QUEUE_UPDATE',
+                            title: 'Cập nhật xếp lốt / vị trí',
+                            description: descriptions.join(' | '),
+                            userId: userId,
+                            metadata: {
+                                oldQueueNo,
+                                newQueueNo: item.queueNo,
+                                laneId: item.laneId,
+                                equipmentId: item.equipmentId
+                            }
+                        }
+                    })
+                );
             }
 
-            // Wait for all updates
+            // Wait for all updates and event creations
             await Promise.all(results);
 
             // Re-fetch to return with basic includes

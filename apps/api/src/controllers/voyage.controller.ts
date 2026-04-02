@@ -138,7 +138,8 @@ export class VoyageController {
             if (!Array.isArray(updates)) {
                 return res.status(400).json({ message: 'Payload must be an array of updates' });
             }
-            const voyages = await VoyageService.reorderQueue(updates);
+            const userId = (req as any).user?.employeeId;
+            const voyages = await VoyageService.reorderQueue(updates, userId);
             res.json(voyages);
         } catch (error: any) {
             res.status(400).json({ message: error.message });
